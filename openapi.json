@@ -1,0 +1,1546 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "代理兑换接口",
+    "version": "1.0.0",
+    "description": "代理的服务器用 API 密钥调用：查卡密 → 核对账号（拿 ticket）→ 确认兑换（ticket + idempotency_key → 订单号）→ 按 poll_after 查订单直到出结果。\n\n完整说明（重试规则、状态处理、上线前自检）见随附的《代理对接文档》。所有响应都是 `{ok, data | error, trace_id}`；失败时按 `error.code` 写判断，`error.message` 是可以直接给买家看的中文句子。"
+  },
+  "servers": [
+    {
+      "url": "https://recharge.chongplus.store/api/open/v1",
+      "description": "正式接口"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "联调",
+      "description": "验证密钥、看我们看到的来源 IP"
+    },
+    {
+      "name": "兑换",
+      "description": "查卡密、核对账号、确认兑换"
+    },
+    {
+      "name": "订单",
+      "description": "查订单、按卡密找回订单"
+    }
+  ],
+  "paths": {
+    "/ping": {
+      "get": {
+        "tags": [
+          "联调"
+        ],
+        "operationId": "ping",
+        "summary": "验证密钥",
+        "description": "检查密钥是否有效，返回这把密钥的名字、我们看到的你的来源 IP（登记 IP 名单时以它为准）和限额。",
+        "responses": {
+          "200": {
+            "description": "密钥有效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "成功",
+                  "required": [
+                    "ok",
+                    "data",
+                    "trace_id"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PingData"
+                    },
+                    "trace_id": {
+                      "$ref": "#/components/schemas/TraceID"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "name": "代理甲",
+                    "ip": "203.0.113.10",
+                    "server_time": "2026-10-05T09:00:00Z",
+                    "limits": {
+                      "rate_per_min": 60,
+                      "max_inflight": 5
+                    }
+                  },
+                  "trace_id": "9F2A41C07B"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_key": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "invalid_key",
+                        "message": "密钥无效或已停用",
+                        "retryable": false
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`ip_not_allowed`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "ip_not_allowed": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "ip_not_allowed",
+                        "message": "当前请求来源的 IP 不在这把密钥允许的名单里",
+                        "retryable": false,
+                        "details": {
+                          "ip": "203.0.113.99"
+                        }
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`too_many_failures`、`rate_limited`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`service_disabled`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cdk/query": {
+      "post": {
+        "tags": [
+          "兑换"
+        ],
+        "operationId": "queryCDK",
+        "summary": "查卡密",
+        "description": "查一张卡密是什么套餐、现在能不能用。只是查询，不消耗卡密；同一张卡密 60 秒内的重复查询可能直接返回缓存结果。你这把密钥自己已经提交过这张卡密的订单时直接告诉你：还在处理是 `cdk_not_usable`，已经兑换成功是 `cdk_used`，都带 `error.details.order_no`。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CDKRequest"
+              },
+              "example": {
+                "cdk": "XXXXXXXXXXXX-XXXXXXXXXXXX-XXXXXXXXXXXX"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "卡密可以用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "成功",
+                  "required": [
+                    "ok",
+                    "data",
+                    "trace_id"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/QueryData"
+                    },
+                    "trace_id": {
+                      "$ref": "#/components/schemas/TraceID"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "plan": "pro-5x",
+                    "plan_name": "Pro 5x",
+                    "cdk_state": "available"
+                  },
+                  "trace_id": "9F2A41C07B"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`bad_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_key": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "invalid_key",
+                        "message": "密钥无效或已停用",
+                        "retryable": false
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`cdk_used`、`cdk_not_usable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "cdk_used": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "cdk_used",
+                        "message": "卡密已兑换或已使用",
+                        "retryable": false,
+                        "cdk_state": "used",
+                        "details": {
+                          "order_no": "OD3F9A1C07B2D4E5"
+                        }
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`cdk_invalid`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "cdk_invalid": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "cdk_invalid",
+                        "message": "卡密无效，请核对后重试",
+                        "retryable": false
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "busy": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "busy",
+                        "message": "当前请求较多，请稍后再试",
+                        "retryable": true,
+                        "retry_after": 30
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`try_later`、`service_unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/redeem/verify": {
+      "post": {
+        "tags": [
+          "兑换"
+        ],
+        "operationId": "verifyAccount",
+        "summary": "核对账号",
+        "description": "核对买家的账号能不能兑换这张卡密。通过（`eligible: true`）就返回 `ticket`（10 分钟内有效、只能用于一次兑换）。账号已有生效中的套餐时 HTTP 仍是 200，但 `eligible: false`、没有 `ticket`。这一步要 10 秒左右，请把超时设到 60 秒以上。不消耗卡密。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              },
+              "example": {
+                "cdk": "XXXXXXXXXXXX-XXXXXXXXXXXX-XXXXXXXXXXXX",
+                "session": "{\"user\":{...},\"accessToken\":\"...\"}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "核对完成（看 eligible）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "成功",
+                  "required": [
+                    "ok",
+                    "data",
+                    "trace_id"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/VerifyData"
+                    },
+                    "trace_id": {
+                      "$ref": "#/components/schemas/TraceID"
+                    }
+                  }
+                },
+                "examples": {
+                  "可以兑换": {
+                    "value": {
+                      "ok": true,
+                      "data": {
+                        "eligible": true,
+                        "ticket": "tk_3f9a1c07b2d4e5a6b7c8d9e0f1a2b3c4",
+                        "expires_at": "2026-10-05T09:10:00Z",
+                        "plan": "pro-5x",
+                        "plan_name": "Pro 5x",
+                        "account": {
+                          "email": "bu***@example.com",
+                          "current_plan": "free",
+                          "current_plan_name": "Free",
+                          "has_active_plan": false
+                        }
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  },
+                  "账号已有套餐": {
+                    "value": {
+                      "ok": true,
+                      "data": {
+                        "eligible": false,
+                        "reason": "account_has_plan",
+                        "message": "这个账号已有生效中的套餐，不能叠加，请换一个账号。卡密未消耗",
+                        "plan": "pro-5x",
+                        "plan_name": "Pro 5x",
+                        "account": {
+                          "email": "bu***@example.com",
+                          "current_plan": "plus",
+                          "current_plan_name": "Plus",
+                          "has_active_plan": true
+                        }
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`bad_request`、`session_format`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "session_format": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "session_format",
+                        "message": "Session 格式不对：请打开 chatgpt.com/api/auth/session，把整页内容完整复制过来",
+                        "retryable": false,
+                        "cdk_state": "available"
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`cdk_used`、`cdk_not_usable`、`wait_before_retry`、`account_not_eligible`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "cdk_used": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "cdk_used",
+                        "message": "卡密已兑换或已使用",
+                        "retryable": false,
+                        "cdk_state": "used",
+                        "details": {
+                          "order_no": "OD3F9A1C07B2D4E5"
+                        }
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  },
+                  "wait_before_retry": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "wait_before_retry",
+                        "message": "请过两分钟之后再尝试。卡密未消耗",
+                        "retryable": true,
+                        "retry_after": 87,
+                        "cdk_state": "available"
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`session_invalid`、`cdk_invalid`、`request_rejected`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "cdk_invalid": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "cdk_invalid",
+                        "message": "卡密无效，请核对后重试",
+                        "retryable": false
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "busy": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "busy",
+                        "message": "当前请求较多，请稍后再试",
+                        "retryable": true,
+                        "retry_after": 30
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`try_later`、`service_unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/redeem": {
+      "post": {
+        "tags": [
+          "兑换"
+        ],
+        "operationId": "redeem",
+        "summary": "确认兑换",
+        "description": "用核对票据确认兑换，返回订单（开通在后台进行）。从这一步开始卡密才会被占用。\n\n**重试规则**：请求超时、没拿到响应、收到 5xx，或者收到 `busy` / `too_many_inflight` / `service_unavailable` / `try_later`，都用**同一张 ticket、同一个 idempotency_key** 原样再发——会返回同一张订单，不会重复兑换；也可以用 `POST /orders/lookup` 按卡密找回。收到其他错误时这张 ticket 已作废：处理完问题后从核对账号重新来，并换一个新的幂等号。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemRequest"
+              },
+              "example": {
+                "ticket": "tk_3f9a1c07b2d4e5a6b7c8d9e0f1a2b3c4",
+                "idempotency_key": "order-20261005-000123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已受理（或同一个幂等号重试，返回原来那张单）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "成功",
+                  "required": [
+                    "ok",
+                    "data",
+                    "trace_id"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Order"
+                    },
+                    "trace_id": {
+                      "$ref": "#/components/schemas/TraceID"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "order_no": "OD3F9A1C07B2D4E5",
+                    "status": "processing",
+                    "cdk_state": "held",
+                    "plan": "pro-5x",
+                    "plan_name": "Pro 5x",
+                    "buyer_email": "bu***@example.com",
+                    "message": "开通中，通常 1–3 分钟。请不要重复提交。卡密已锁定。",
+                    "created_at": "2026-10-05T09:02:11Z",
+                    "updated_at": "2026-10-05T09:02:11Z",
+                    "poll_after": 8
+                  },
+                  "trace_id": "9F2A41C07B"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`bad_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`no_such_ticket`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`ticket_expired`、`ticket_used`、`idempotency_key_reused`、`wait_before_retry`、`account_has_plan`、`cdk_used`、`cdk_not_usable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "ticket_expired": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "ticket_expired",
+                        "message": "这次核对已过期，请重新核对账号。卡密未消耗",
+                        "retryable": false,
+                        "cdk_state": "available"
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  },
+                  "ticket_used": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "ticket_used",
+                        "message": "这次核对已经提交过了",
+                        "retryable": false,
+                        "details": {
+                          "order_no": "OD3F9A1C07B2D4E5"
+                        }
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  },
+                  "wait_before_retry": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "wait_before_retry",
+                        "message": "请过两分钟之后再尝试。卡密未消耗",
+                        "retryable": true,
+                        "retry_after": 87,
+                        "cdk_state": "available"
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  },
+                  "cdk_used": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "cdk_used",
+                        "message": "卡密已兑换或已使用",
+                        "retryable": false,
+                        "cdk_state": "used",
+                        "details": {
+                          "order_no": "OD3F9A1C07B2D4E5"
+                        }
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`session_invalid`、`request_rejected`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`too_many_inflight`、`busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "busy": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "busy",
+                        "message": "当前请求较多，请稍后再试",
+                        "retryable": true,
+                        "retry_after": 30
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`try_later`、`service_unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{order_no}": {
+      "get": {
+        "tags": [
+          "订单"
+        ],
+        "operationId": "getOrder",
+        "summary": "查订单",
+        "description": "查一张订单现在的状态。只能查你这把密钥提交的订单。没出结果时按 `poll_after` 秒再查，请不要比它查得更勤。",
+        "parameters": [
+          {
+            "name": "order_no",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OrderNo"
+            },
+            "example": "OD3F9A1C07B2D4E5"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "订单现在的样子",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "成功",
+                  "required": [
+                    "ok",
+                    "data",
+                    "trace_id"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Order"
+                    },
+                    "trace_id": {
+                      "$ref": "#/components/schemas/TraceID"
+                    }
+                  }
+                },
+                "examples": {
+                  "开通中": {
+                    "value": {
+                      "ok": true,
+                      "data": {
+                        "order_no": "OD3F9A1C07B2D4E5",
+                        "status": "processing",
+                        "cdk_state": "held",
+                        "plan": "pro-5x",
+                        "plan_name": "Pro 5x",
+                        "buyer_email": "bu***@example.com",
+                        "message": "开通中，通常 1–3 分钟。请不要重复提交。卡密已锁定。",
+                        "created_at": "2026-10-05T09:02:11Z",
+                        "updated_at": "2026-10-05T09:02:11Z",
+                        "poll_after": 8
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  },
+                  "已开通": {
+                    "value": {
+                      "ok": true,
+                      "data": {
+                        "order_no": "OD3F9A1C07B2D4E5",
+                        "status": "succeeded",
+                        "cdk_state": "used",
+                        "plan": "pro-5x",
+                        "plan_name": "Pro 5x",
+                        "buyer_email": "bu***@example.com",
+                        "message": "已开通。卡密已消耗。",
+                        "created_at": "2026-10-05T09:02:11Z",
+                        "updated_at": "2026-10-05T09:03:42Z",
+                        "finished_at": "2026-10-05T09:03:42Z"
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  },
+                  "失败（卡密未消耗）": {
+                    "value": {
+                      "ok": true,
+                      "data": {
+                        "order_no": "OD3F9A1C07B2D4E5",
+                        "status": "failed",
+                        "cdk_state": "available",
+                        "plan": "pro-5x",
+                        "plan_name": "Pro 5x",
+                        "buyer_email": "bu***@example.com",
+                        "message": "这次付款被风控拦截了，请过两分钟之后再尝试。卡密未消耗。",
+                        "created_at": "2026-10-05T09:02:11Z",
+                        "updated_at": "2026-10-05T09:03:42Z",
+                        "finished_at": "2026-10-05T09:03:42Z",
+                        "failure": {
+                          "code": "payment_blocked",
+                          "action": "retry_later"
+                        }
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  },
+                  "人工核对": {
+                    "value": {
+                      "ok": true,
+                      "data": {
+                        "order_no": "OD3F9A1C07B2D4E5",
+                        "status": "under_review",
+                        "cdk_state": "held",
+                        "plan": "pro-5x",
+                        "plan_name": "Pro 5x",
+                        "buyer_email": "bu***@example.com",
+                        "message": "这一单需要人工核对，通常 2 小时内有结果。请不要重复提交，并联系客服（提供订单号）。卡密已锁定。",
+                        "created_at": "2026-10-05T09:02:11Z",
+                        "updated_at": "2026-10-05T09:05:00Z",
+                        "poll_after": 60
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_key": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "invalid_key",
+                        "message": "密钥无效或已停用",
+                        "retryable": false
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`no_such_order`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "no_such_order": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "no_such_order",
+                        "message": "没有找到这张订单",
+                        "retryable": false
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`rate_limited`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/lookup": {
+      "post": {
+        "tags": [
+          "订单"
+        ],
+        "operationId": "lookupOrder",
+        "summary": "按卡密找回订单",
+        "description": "返回你这把密钥对这张卡密提交的最近一张订单（格式同查订单）；没有就是 404 `no_such_order`。订单号弄丢了、页面刷新了、或者提交时没拿到响应的时候用。卡密放在请求体里、不放网址里。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CDKRequest"
+              },
+              "example": {
+                "cdk": "XXXXXXXXXXXX-XXXXXXXXXXXX-XXXXXXXXXXXX"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "找到的订单",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "成功",
+                  "required": [
+                    "ok",
+                    "data",
+                    "trace_id"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Order"
+                    },
+                    "trace_id": {
+                      "$ref": "#/components/schemas/TraceID"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "order_no": "OD3F9A1C07B2D4E5",
+                    "status": "processing",
+                    "cdk_state": "held",
+                    "plan": "pro-5x",
+                    "plan_name": "Pro 5x",
+                    "buyer_email": "bu***@example.com",
+                    "message": "开通中，通常 1–3 分钟。请不要重复提交。卡密已锁定。",
+                    "created_at": "2026-10-05T09:02:11Z",
+                    "updated_at": "2026-10-05T09:02:11Z",
+                    "poll_after": 8
+                  },
+                  "trace_id": "9F2A41C07B"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`bad_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_key": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "invalid_key",
+                        "message": "密钥无效或已停用",
+                        "retryable": false
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`no_such_order`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "no_such_order": {
+                    "value": {
+                      "ok": false,
+                      "error": {
+                        "code": "no_such_order",
+                        "message": "没有找到这张订单",
+                        "retryable": false
+                      },
+                      "trace_id": "9F2A41C07B"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Authorization: Bearer <密钥>。密钥 cpa_ 开头、共 47 个字符，只放在你的服务器上"
+      }
+    },
+    "schemas": {
+      "TraceID": {
+        "type": "string",
+        "pattern": "^[0-9A-F]{10}$",
+        "description": "每个响应都有；联系我们排查问题时请带上它",
+        "example": "9F2A41C07B"
+      },
+      "OrderNo": {
+        "type": "string",
+        "pattern": "^OD[0-9A-F]{14}$",
+        "example": "OD3F9A1C07B2D4E5"
+      },
+      "Ticket": {
+        "type": "string",
+        "pattern": "^tk_[0-9a-f]{32}$",
+        "description": "核对票据：10 分钟内有效，只能用于一次兑换",
+        "example": "tk_3f9a1c07b2d4e5a6b7c8d9e0f1a2b3c4"
+      },
+      "Time": {
+        "type": "string",
+        "format": "date-time",
+        "description": "RFC 3339 的 UTC 时间",
+        "example": "2026-10-05T09:00:00Z"
+      },
+      "MaskedEmail": {
+        "type": "string",
+        "description": "打码后的账号邮箱",
+        "example": "bu***@example.com"
+      },
+      "CDKState": {
+        "type": "string",
+        "enum": [
+          "available",
+          "held",
+          "used"
+        ],
+        "description": "卡密现在的状态：available 还没消耗（可以重新核对、重新提交）/ held 已锁定（正在处理或等人工核对，不能重复提交）/ used 已使用"
+      },
+      "Plan": {
+        "type": "string",
+        "enum": [
+          "go",
+          "plus",
+          "pro-5x",
+          "pro-20x",
+          "pro-max",
+          "other"
+        ],
+        "description": "套餐代号；以后新增的套餐会先用 other"
+      },
+      "PlanName": {
+        "type": "string",
+        "enum": [
+          "Go",
+          "Plus",
+          "Pro 5x",
+          "Pro 20x",
+          "Pro Max",
+          "ChatGPT 套餐"
+        ]
+      },
+      "CurrentPlan": {
+        "type": "string",
+        "enum": [
+          "free",
+          "go",
+          "plus",
+          "pro-5x",
+          "pro-20x",
+          "pro-max",
+          "other"
+        ]
+      },
+      "CurrentPlanName": {
+        "type": "string",
+        "enum": [
+          "Free",
+          "Go",
+          "Plus",
+          "Pro 5x",
+          "Pro 20x",
+          "Pro Max",
+          "ChatGPT 套餐"
+        ]
+      },
+      "OrderStatus": {
+        "type": "string",
+        "enum": [
+          "processing",
+          "succeeded",
+          "failed",
+          "under_review"
+        ],
+        "description": "processing 开通中 / succeeded 已开通（终态）/ failed 失败（终态）/ under_review 需要人工核对（之后会变成 succeeded 或 failed）"
+      },
+      "FailureCode": {
+        "type": "string",
+        "enum": [
+          "session_invalid",
+          "account_has_plan",
+          "account_restricted",
+          "payment_blocked",
+          "payment_failed",
+          "try_later",
+          "cancelled",
+          "not_accepted",
+          "recharge_failed"
+        ]
+      },
+      "FailureAction": {
+        "type": "string",
+        "enum": [
+          "retry_later",
+          "change_account",
+          "recopy_session"
+        ],
+        "description": "建议界面怎么引导买家：过两分钟再试 / 换一个账号 / 重新复制 Session"
+      },
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "invalid_key",
+          "ip_not_allowed",
+          "service_disabled",
+          "rate_limited",
+          "too_many_failures",
+          "busy",
+          "too_many_inflight",
+          "bad_request",
+          "not_found",
+          "cdk_invalid",
+          "cdk_used",
+          "cdk_not_usable",
+          "session_format",
+          "session_invalid",
+          "account_not_eligible",
+          "account_has_plan",
+          "wait_before_retry",
+          "no_such_ticket",
+          "ticket_expired",
+          "ticket_used",
+          "idempotency_key_reused",
+          "no_such_order",
+          "request_rejected",
+          "try_later",
+          "service_unavailable",
+          "internal_error"
+        ],
+        "description": "- `invalid_key`（HTTP 401）：密钥无效或已停用\n- `ip_not_allowed`（HTTP 403）：来源 IP 不在这把密钥登记的名单里（error.details.ip 是我们看到的你的来源 IP）\n- `service_disabled`（HTTP 503）：接口暂时关闭\n- `rate_limited`（HTTP 429）：请求过于频繁\n- `too_many_failures`（HTTP 429）：来自这个 IP 的错误请求过多，被临时封锁\n- `busy`（HTTP 429）：系统繁忙，按 Retry-After 稍后重试\n- `too_many_inflight`（HTTP 429）：同时处理的订单已达上限\n- `bad_request`（HTTP 400）：请求格式不对\n- `not_found`（HTTP 404）：接口不存在\n- `cdk_invalid`（HTTP 422）：卡密无效\n- `cdk_used`（HTTP 409）：卡密已兑换或已使用\n- `cdk_not_usable`（HTTP 409）：卡密暂时不能用（停用、冻结或正在处理）\n- `session_format`（HTTP 400）：Session 不是整页内容\n- `session_invalid`（HTTP 422）：账号登录已失效\n- `account_not_eligible`（HTTP 409）：账号现在不能充值这个套餐\n- `account_has_plan`（HTTP 409）：账号已有生效中的套餐\n- `wait_before_retry`（HTTP 409）：这个账号要等一会儿再试（带 retry_after）\n- `no_such_ticket`（HTTP 404）：没有这张核对票据\n- `ticket_expired`（HTTP 409）：核对已过期或已作废，重新核对账号\n- `ticket_used`（HTTP 409）：这张票据已经提交过（error.details.order_no 是对应订单）\n- `idempotency_key_reused`（HTTP 409）：幂等号已用于另一张票据\n- `no_such_order`（HTTP 404）：没有这张订单\n- `request_rejected`（HTTP 422）：请求没有通过\n- `try_later`（HTTP 503）：请过两分钟之后再尝试\n- `service_unavailable`（HTTP 503）：服务暂时不可用\n- `internal_error`（HTTP 500）：服务内部错误"
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "retryable"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ErrorCode"
+          },
+          "message": {
+            "type": "string",
+            "description": "给终端买家看的中文句子，可以直接显示"
+          },
+          "retryable": {
+            "type": "boolean",
+            "description": "同样的操作稍后能不能再做一次（怎么重来以各接口的说明为准）"
+          },
+          "retry_after": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 900,
+            "description": "建议等多少秒；同时放在 Retry-After 响应头里"
+          },
+          "cdk_state": {
+            "$ref": "#/components/schemas/CDKState"
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "order_no": {
+                "$ref": "#/components/schemas/OrderNo"
+              },
+              "ip": {
+                "type": "string",
+                "description": "来源 IP 被拒绝时，我们看到的你的来源 IP"
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "ok",
+          "error",
+          "trace_id"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              false
+            ]
+          },
+          "error": {
+            "$ref": "#/components/schemas/Error"
+          },
+          "trace_id": {
+            "$ref": "#/components/schemas/TraceID"
+          }
+        }
+      },
+      "PingData": {
+        "type": "object",
+        "required": [
+          "name",
+          "ip",
+          "server_time",
+          "limits"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "这把密钥的名字"
+          },
+          "ip": {
+            "type": "string",
+            "description": "我们看到的你的来源 IP"
+          },
+          "server_time": {
+            "$ref": "#/components/schemas/Time"
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "rate_per_min": {
+                "type": "integer",
+                "description": "每分钟请求上限"
+              },
+              "max_inflight": {
+                "type": "integer",
+                "description": "同时处理的订单上限"
+              }
+            }
+          }
+        }
+      },
+      "CDKRequest": {
+        "type": "object",
+        "required": [
+          "cdk"
+        ],
+        "properties": {
+          "cdk": {
+            "type": "string",
+            "description": "卡密；大小写、首尾空格不敏感"
+          }
+        }
+      },
+      "QueryData": {
+        "type": "object",
+        "required": [
+          "plan",
+          "plan_name",
+          "cdk_state"
+        ],
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/Plan"
+          },
+          "plan_name": {
+            "$ref": "#/components/schemas/PlanName"
+          },
+          "cdk_state": {
+            "$ref": "#/components/schemas/CDKState"
+          }
+        }
+      },
+      "VerifyRequest": {
+        "type": "object",
+        "required": [
+          "cdk",
+          "session"
+        ],
+        "properties": {
+          "cdk": {
+            "type": "string"
+          },
+          "session": {
+            "description": "买家的整页 Session：在已登录 ChatGPT 的浏览器里打开 https://chatgpt.com/api/auth/session，把页面上的整段内容（以 { 开头，里面有 accessToken）原样传过来。可以是字符串，也可以直接是 JSON 对象。只在这一次请求里用，不要保存、不要写日志。",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "required": [
+          "email",
+          "current_plan",
+          "current_plan_name",
+          "has_active_plan"
+        ],
+        "properties": {
+          "email": {
+            "$ref": "#/components/schemas/MaskedEmail"
+          },
+          "current_plan": {
+            "$ref": "#/components/schemas/CurrentPlan"
+          },
+          "current_plan_name": {
+            "$ref": "#/components/schemas/CurrentPlanName"
+          },
+          "has_active_plan": {
+            "type": "boolean",
+            "description": "true 时 eligible 一定是 false"
+          }
+        }
+      },
+      "VerifyData": {
+        "type": "object",
+        "required": [
+          "eligible",
+          "plan",
+          "plan_name",
+          "account"
+        ],
+        "description": "eligible=true 时有 ticket、expires_at；eligible=false 时有 reason、message，没有 ticket",
+        "properties": {
+          "eligible": {
+            "type": "boolean"
+          },
+          "ticket": {
+            "$ref": "#/components/schemas/Ticket"
+          },
+          "expires_at": {
+            "$ref": "#/components/schemas/Time"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "account_has_plan"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "给买家看的中文句子"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/Plan"
+          },
+          "plan_name": {
+            "$ref": "#/components/schemas/PlanName"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          }
+        }
+      },
+      "RedeemRequest": {
+        "type": "object",
+        "required": [
+          "ticket",
+          "idempotency_key"
+        ],
+        "properties": {
+          "ticket": {
+            "$ref": "#/components/schemas/Ticket"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{8,64}$",
+            "description": "幂等号：每一次新的兑换尝试用一个新值（推荐用你系统里的订单号或 UUID），同一次尝试的所有重试用同一个值"
+          }
+        }
+      },
+      "Failure": {
+        "type": "object",
+        "required": [
+          "code",
+          "action"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/FailureCode"
+          },
+          "action": {
+            "$ref": "#/components/schemas/FailureAction"
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "required": [
+          "order_no",
+          "status",
+          "cdk_state",
+          "plan",
+          "plan_name",
+          "buyer_email",
+          "message",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "order_no": {
+            "$ref": "#/components/schemas/OrderNo"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "cdk_state": {
+            "$ref": "#/components/schemas/CDKState"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/Plan"
+          },
+          "plan_name": {
+            "$ref": "#/components/schemas/PlanName"
+          },
+          "buyer_email": {
+            "$ref": "#/components/schemas/MaskedEmail"
+          },
+          "message": {
+            "type": "string",
+            "description": "这一单现在的情况，给买家看的中文句子（末尾说明卡密有没有消耗）"
+          },
+          "created_at": {
+            "$ref": "#/components/schemas/Time"
+          },
+          "updated_at": {
+            "$ref": "#/components/schemas/Time"
+          },
+          "finished_at": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Time"
+              }
+            ],
+            "description": "只有 succeeded、failed 才有"
+          },
+          "poll_after": {
+            "type": "integer",
+            "description": "只在没出结果时出现：建议多少秒后再来查（开通中 8 秒，人工核对 60 秒）"
+          },
+          "failure": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Failure"
+              }
+            ],
+            "description": "只在 failed 时出现"
+          }
+        }
+      }
+    }
+  }
+}
