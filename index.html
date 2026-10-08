@@ -8,19 +8,19 @@
 <title>代理对接文档 · 兑换接口 v1</title>
 <style>
 :root{
-  --bg:#faf9f6; --surface:#ffffff; --surface-2:#f3f0e8; --fg:#1d1b17; --fg-2:#5b574e; --fg-3:#8a857a;
-  --line:#e4dfd3; --line-2:#cfc8b8; --accent:#7a6240; --accent-bg:#f1e9d8;
-  --ok:#2f7d4f; --warn:#a56a12; --err:#b3372c; --info:#2d5f8f;
-  --code-bg:#f2efe7; --code-fg:#2b2820;
-  --get:#2d5f8f; --post:#7a6240;
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f4f5f7; --fg:#17191e; --fg-2:#4a505c; --fg-3:#767d8a;
+  --line:#e2e5ea; --line-2:#cbd0d8; --accent:#1d5fc4; --accent-bg:#e9f0fb;
+  --ok:#1e7a49; --warn:#965f00; --err:#b0302e; --info:#1d5fc4;
+  --code-bg:#f4f5f7; --code-fg:#1c2230;
+  --get:#16786c; --post:#1d5fc4;
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#0a0e17; --surface:#111725; --surface-2:#161d2e; --fg:#e7e5df; --fg-2:#a7abb6; --fg-3:#767c8b;
-    --line:#232b3d; --line-2:#34405a; --accent:#d4a574; --accent-bg:#1d2232;
-    --ok:#5cc58a; --warn:#e0a13c; --err:#ee7d72; --info:#7fb2e6;
-    --code-bg:#0d1320; --code-fg:#dedbd2;
-    --get:#7fb2e6; --post:#d4a574;
+    --bg:#111317; --surface:#171a1f; --surface-2:#1d2026; --fg:#e5e7eb; --fg-2:#a9afba; --fg-3:#7d8492;
+    --line:#2a2e36; --line-2:#3a3f49; --accent:#7ba6f2; --accent-bg:#1b2333;
+    --ok:#5cc58a; --warn:#e0a13c; --err:#ee7d72; --info:#7ba6f2;
+    --code-bg:#14171b; --code-fg:#dde1e8;
+    --get:#56c2b2; --post:#7ba6f2;
   }
 }
 *{box-sizing:border-box}
@@ -114,7 +114,7 @@ details.code pre{margin:0;border:0;border-top:1px solid var(--line);border-radiu
   td:first-child{font-weight:600;padding-bottom:5px}
 }
 @media print{
-  :root{--bg:#fff;--surface:#fff;--surface-2:#f5f5f2;--fg:#000;--fg-2:#333;--fg-3:#555;--line:#ccc;--line-2:#aaa;--code-bg:#f5f5f2;--code-fg:#000;--accent:#5a4528;--get:#2d5f8f;--post:#5a4528;--ok:#2f7d4f;--warn:#a56a12;--err:#b3372c;--info:#2d5f8f}
+  :root{--bg:#fff;--surface:#fff;--surface-2:#f4f5f7;--fg:#000;--fg-2:#333;--fg-3:#555;--line:#ccc;--line-2:#aaa;--code-bg:#f4f5f7;--code-fg:#000;--accent:#1a4f9e;--get:#16655b;--post:#1a4f9e;--ok:#1e7a49;--warn:#965f00;--err:#b0302e;--info:#1a4f9e}
   body{font-size:13px;line-height:1.6}
   nav.toc{display:none} .wrap{display:block;max-width:none;padding:0} header.hero{padding:0 0 18px}
   pre{white-space:pre-wrap;font-size:11px} .tw,.dw{overflow:visible} .dw svg{min-width:0}
@@ -133,13 +133,14 @@ details.code pre{margin:0;border:0;border-top:1px solid var(--line);border-radiu
   <p class="eyebrow">兑换接口 v1 · 服务器对服务器</p>
   <h1>代理对接文档</h1>
   <p class="lead">让你自己的充值站直接完成兑换：买家在你的系统里粘贴卡密和账号信息，你的服务器调用本接口，买家不用再跳到我们的网站。</p>
-  <p class="meta">版本 v1 · 2026-10-05 · 接口地址 <code>https://recharge.chongplus.store/api/open/v1</code></p>
+  <p class="meta">版本 v1 · 2026-10-08 更新（<a href="#changelog">更新记录</a>）· 接口地址 <code>https://recharge.chongplus.store/api/open/v1</code></p>
 </header>
 
 <nav class="toc" aria-label="目录">
   <p>目录</p>
   <a href="#flow">1. 流程总览</a>
   <a href="#start">2. 开始之前</a>
+  <a class="sub" href="#terms">使用约定</a>
   <a href="#conventions">3. 通用约定</a>
   <a href="#endpoints">4. 接口</a>
   <a class="sub" href="#ping">GET /ping</a>
@@ -153,6 +154,7 @@ details.code pre{margin:0;border:0;border-top:1px solid var(--line);border-radiu
   <a href="#example">7. 示例代码</a>
   <a href="#checklist">8. 上线前自检</a>
   <a href="#faq">9. 常见问题</a>
+  <a href="#changelog">10. 更新记录</a>
 </nav>
 
 <main id="main">
@@ -228,6 +230,16 @@ details.code pre{margin:0;border:0;border-top:1px solid var(--line);border-radiu
       <li>用错误的密钥、或从没登记的 IP 反复请求，我们会临时封锁该来源 IP 10 分钟。</li>
     </ul>
   </div>
+  <h3 id="terms">使用约定</h3>
+  <p>使用本接口，即表示同意下面几条：</p>
+  <ul>
+    <li>本接口只提供兑换能力。买家看到的页面、文案和样式，由你自己设计、自己制作。</li>
+    <li>不得复制、仿制或套用我们网站的页面、样式、图片、视频和教程；不得用 iframe 嵌入我们的网站，也不得用自己的域名转发（镜像）我们的网站。</li>
+    <li>失败的订单只能由买家自己点重试，你的程序不得自动重新提交（原因见 <a href="#status">状态与失败处理</a>）。</li>
+    <li>密钥只给你自己的系统用，不转借、不转卖。</li>
+    <li>订单结果以本接口返回的为准。</li>
+    <li>违反以上任何一条，我们会停用密钥。</li>
+  </ul>
   <h3>联调步骤</h3>
   <ol>
     <li>调 <a href="#ping"><code>GET /ping</code></a>：确认密钥有效，返回的 <code>ip</code> 就是你服务器的出口 IP。</li>
@@ -542,6 +554,10 @@ details.code pre{margin:0;border:0;border-top:1px solid var(--line);border-radiu
     <p>订单 <code>failed</code> 且 <code>cdk_state</code> 是 <code>available</code>：卡密还在。按 <code>action</code> 引导买家（等两分钟 / 换账号 / 重新复制 Session），然后从 <a href="#verify"><code>/redeem/verify</code></a> 重新来，使用<b>新的</b>幂等号。部分失败（比如付款被风控拦截）之后，同一个账号需要等约 2 分钟才能再次提交，否则会收到 <code>wait_before_retry</code>（带 <code>retry_after</code>）。</p>
     <p><code>cdk_state</code> 不是 <code>available</code> 时，不要重新提交，联系我们。</p>
   </div>
+  <div class="callout danger">
+    <strong class="t">不要让程序自动重新提交</strong>
+    <p><code>failure.action</code> 是 <code>retry_later</code> 时，意思是请买家过两分钟再自己点一次，不是让你的系统过两分钟自动再交。每一次提交都会真实发起一次付款；同一个账号接连失败时，自动重交只会接着失败。重新提交必须由买家自己发起，并且从 <a href="#verify"><code>/redeem/verify</code></a> 重新核对开始。</p>
+  </div>
 </section>
 
 <section id="errors">
@@ -590,7 +606,7 @@ details.code pre{margin:0;border:0;border-top:1px solid var(--line);border-radiu
 
 <section id="example">
   <h2>7. 示例代码</h2>
-  <p>下面三份示例做的是同一件事：查卡密 → 核对账号 → 确认兑换（按 <a href="#redeem">出了问题怎么重来</a> 处理超时和「这次没处理」的错误）→ 按 <code>poll_after</code> 查到出结果。都只用语言自带的库，设好 <code>AGENT_API_KEY</code> 环境变量就能运行；发布前我们对着真实接口逐个跑通过。</p>
+  <p>下面四份示例做的是同一件事：查卡密 → 核对账号 → 确认兑换（按 <a href="#redeem">出了问题怎么重来</a> 处理超时和「这次没处理」的错误）→ 按 <code>poll_after</code> 查到出结果。都只用语言自带的库（PHP 用 curl 扩展），设好 <code>AGENT_API_KEY</code> 环境变量就能运行；每次更新文档，我们都会把四份示例对着接口逐个跑一遍。</p>
   <div class="callout">
     <strong class="t">接进你自己的系统时</strong>
     <ul>
@@ -1113,6 +1129,167 @@ func main() {
 	out, _ := json.MarshalIndent(result, "", "  ")
 	fmt.Println(string(out))
 }</code></pre>
+  <details class="code" open>
+    <summary>PHP 7.4+（<code>redeem.php</code>，需要 curl 扩展）</summary>
+<pre><code class="language-php" data-file="redeem.php">&lt;?php
+// 兑换接口 v1 示例（PHP 7.4+，需要 curl 扩展）。
+//
+// 用法：
+//   export AGENT_API_KEY=cpa_...          # 密钥只放在服务器的环境变量里
+//   php redeem.php &lt;卡密&gt; &lt;买家 Session 文件&gt;
+//
+// 把这份代码接进你的系统时：idempotency_key 要在调用 /redeem 之前和你自己的订单一起存进数据库，
+// 重试时原样复用；买家的 Session 只在这一次请求里用，不要保存、不要写日志。
+
+define('API_BASE', getenv('AGENT_API_BASE') ?: 'https://recharge.chongplus.store/api/open/v1');
+define('API_KEY', (string) getenv('AGENT_API_KEY'));
+// 换成你自己系统的名字。别用框架或库自带的默认值：有的会被网关直接拒绝（HTTP 403，回包是 error code: 1010）。
+const USER_AGENT = 'my-shop/1.0';
+
+// 这几种错误说明「这次没处理」：等 retry_after 秒后，用同一张 ticket、同一个 idempotency_key 原样再发。
+const RESEND_SAME = ['busy', 'rate_limited', 'too_many_inflight', 'service_unavailable', 'service_disabled', 'try_later', 'internal_error'];
+const UNFINISHED = ['processing', 'under_review'];
+
+/** 接口明确返回了错误（ok=false）。 */
+class ApiError extends Exception
+{
+    public $status;
+    public $errorCode;
+    public $userMessage; // 给买家看的那句话
+    public $retryAfter;
+    public $details;
+
+    public function __construct(int $status, array $error, string $traceId)
+    {
+        $this-&gt;status = $status;
+        $this-&gt;errorCode = (string) ($error['code'] ?? '');
+        $this-&gt;userMessage = (string) ($error['message'] ?? '');
+        $this-&gt;retryAfter = (int) ($error['retry_after'] ?? 0);
+        $this-&gt;details = is_array($error['details'] ?? null) ? $error['details'] : [];
+        parent::__construct("{$this-&gt;errorCode}: {$this-&gt;userMessage} (trace_id={$traceId})");
+    }
+}
+
+/** 没拿到响应（超时、断网、网关错误页）：结果未知，只能原样重发或按卡密找回。 */
+class NetworkError extends Exception
+{
+}
+
+function call(string $method, string $path, ?array $body = null): array
+{
+    $headers = ['Authorization: Bearer ' . API_KEY];
+    $options = [
+        CURLOPT_CUSTOMREQUEST =&gt; $method,
+        CURLOPT_RETURNTRANSFER =&gt; true,
+        CURLOPT_USERAGENT =&gt; USER_AGENT,
+        CURLOPT_CONNECTTIMEOUT =&gt; 10,
+        CURLOPT_TIMEOUT =&gt; 90, // 核对账号一步要 10 秒左右
+    ];
+    if ($body !== null) {
+        $options[CURLOPT_POSTFIELDS] = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        $headers[] = 'Content-Type: application/json';
+    }
+    $options[CURLOPT_HTTPHEADER] = $headers;
+    $ch = curl_init(API_BASE . $path);
+    curl_setopt_array($ch, $options);
+    $raw = curl_exec($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    if ($raw === false) {
+        throw new NetworkError(curl_error($ch)); // 超时、断网、连接被断开
+    }
+    $payload = json_decode($raw, true);
+    if (!is_array($payload)) {
+        throw new NetworkError("HTTP {$status}，回包不是 JSON");
+    }
+    if (!empty($payload['ok'])) {
+        return $payload['data'];
+    }
+    throw new ApiError($status, is_array($payload['error'] ?? null) ? $payload['error'] : [], (string) ($payload['trace_id'] ?? ''));
+}
+
+/** 确认兑换。网络出错、或者是「这次没处理」的错误，都用同一张 ticket、同一个幂等号原样再发。 */
+function submit(string $ticket, string $idem, string $cdk): array
+{
+    for ($i = 0; $i &lt; 6; $i++) {
+        try {
+            return call('POST', '/redeem', ['ticket' =&gt; $ticket, 'idempotency_key' =&gt; $idem]);
+        } catch (NetworkError $e) {
+            sleep(3);
+        } catch (ApiError $e) {
+            if ($e-&gt;errorCode === 'ticket_used' &amp;&amp; !empty($e-&gt;details['order_no'])) {
+                return call('GET', '/orders/' . rawurlencode($e-&gt;details['order_no'])); // 这张 ticket 已经提交过：查那张单
+            }
+            if (!in_array($e-&gt;errorCode, RESEND_SAME, true)) {
+                throw $e; // 其他错误：这张 ticket 作废，处理完问题后从核对账号重新来，并换新的幂等号
+            }
+            sleep($e-&gt;retryAfter &gt; 0 ? $e-&gt;retryAfter : 3);
+        }
+    }
+    // 一直没拿到明确结果：按卡密找回（可能已经受理了），绝不换新的幂等号重新提交。
+    return call('POST', '/orders/lookup', ['cdk' =&gt; $cdk]);
+}
+
+function waitUntilDone(array $order, int $deadlineSeconds = 7200): array
+{
+    $deadline = time() + $deadlineSeconds;
+    while (in_array($order['status'], UNFINISHED, true)) {
+        if (time() &gt; $deadline) {
+            break; // 等太久了：提示买家联系客服并给出 order_no，不要重新提交
+        }
+        sleep(max(1, (int) ($order['poll_after'] ?? 8)));
+        try {
+            $order = call('GET', '/orders/' . rawurlencode($order['order_no']));
+        } catch (NetworkError $e) {
+            sleep(10);
+        } catch (ApiError $e) {
+            if (!in_array($e-&gt;errorCode, RESEND_SAME, true)) {
+                throw $e;
+            }
+            sleep($e-&gt;retryAfter &gt; 0 ? $e-&gt;retryAfter : 10);
+        }
+    }
+    return $order;
+}
+
+function redeem(string $cdk, string $session): array
+{
+    $info = call('POST', '/cdk/query', ['cdk' =&gt; $cdk]); // 可选：先告诉买家是什么套餐
+    error_log('套餐：' . $info['plan_name']);
+
+    $check = call('POST', '/redeem/verify', ['cdk' =&gt; $cdk, 'session' =&gt; $session]);
+    if (empty($check['eligible'])) {
+        return ['ok' =&gt; false, 'message' =&gt; $check['message']]; // 账号已有套餐：请买家换一个账号
+    }
+
+    $idem = 'ord-' . bin2hex(random_bytes(12)); // 实际使用时：和你的订单一起先存库，重试时原样复用
+    $order = waitUntilDone(submit($check['ticket'], $idem, $cdk));
+    return [
+        'ok' =&gt; $order['status'] === 'succeeded',
+        'status' =&gt; $order['status'],
+        'message' =&gt; $order['message'],
+        'order_no' =&gt; $order['order_no'],
+        'cdk_state' =&gt; $order['cdk_state'],
+        'failure' =&gt; $order['failure'] ?? null,
+    ];
+}
+
+// 直接用命令行运行时才执行下面这段；被你的系统 include 进去时不会执行。
+if (PHP_SAPI === 'cli' &amp;&amp; realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    if ($argc !== 3) {
+        fwrite(STDERR, "用法：php redeem.php &lt;卡密&gt; &lt;买家 Session 文件&gt;\n");
+        exit(1);
+    }
+    $buyerSession = file_get_contents($argv[2]);
+    if ($buyerSession === false) {
+        exit(1);
+    }
+    try {
+        $result = redeem($argv[1], $buyerSession);
+    } catch (ApiError $e) {
+        $result = ['ok' =&gt; false, 'code' =&gt; $e-&gt;errorCode, 'message' =&gt; $e-&gt;userMessage, 'details' =&gt; (object) $e-&gt;details];
+    }
+    echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), PHP_EOL;
+}</code></pre>
   </details>
 </section>
 
@@ -1127,6 +1304,7 @@ func main() {
     <li>轮询间隔不短于 <code>poll_after</code>；设一个总的等待上限（比如 2 小时），超了提示买家联系客服并给出 <code>order_no</code>。</li>
     <li>买家的 Session 不落库、不进日志；你自己的日志里只记 <code>order_no</code>、<code>trace_id</code>。</li>
     <li>买家界面直接显示 <code>message</code>；失败时按 <code>failure.action</code> 引导买家。</li>
+    <li>订单失败后，只有买家自己点了重试才重新核对、重新提交；程序里没有任何自动重交。</li>
     <li>收到 429 / 503 会按 <code>Retry-After</code> 退避，而不是立刻重试。</li>
     <li>联调步骤里的几个错误分支都走过一遍，界面上给买家的提示和本文档一致。</li>
   </ul>
@@ -1144,14 +1322,25 @@ func main() {
   <p>只要卡密还是 <code>available</code>（核对没通过、或兑换失败后卡密恢复），就可以用新的账号重新 <code>/redeem/verify</code>。</p>
   <h4>收到 403，回包却不是 JSON？</h4>
   <p>回包是一行 <code>error code: 1010</code>：请求在网关就被拒绝了，原因是 <code>User-Agent</code>（见「通用约定」），和密钥、IP 无关，换成你自己系统的名字就好。密钥或 IP 的问题，回包都是 JSON（<code>invalid_key</code>、<code>ip_not_allowed</code>）。</p>
+  <h4>失败了，能让程序过两分钟自动再交吗？</h4>
+  <p>不能。每一次提交都会真实发起一次付款，同一个账号接连失败时，自动重交只会接着失败。请把 <code>message</code> 显示给买家，由买家决定换一个账号，还是过一会儿自己再点一次。</p>
   <h4>联系我们时需要提供什么？</h4>
   <p><code>order_no</code>（或响应里的 <code>trace_id</code>）、发生的大致时间、卡密的前 8 位和后 4 位、你收到的完整响应（请去掉密钥）。</p>
+</section>
+
+<section id="changelog">
+  <h2>10. 更新记录</h2>
+  <div class="tw"><table>
+    <tr><th>日期</th><th>内容</th></tr>
+    <tr><td>2026-10-08</td><td>新增 PHP 示例；新增「使用约定」；写明订单失败后不要让程序自动重新提交。接口本身没有变化。</td></tr>
+    <tr><td>2026-10-05</td><td>v1 首版。</td></tr>
+  </table></div>
 </section>
 
 </main>
 
 <footer>
-  代理对接文档 · 兑换接口 v1 · 2026-10-05 首版。随附 <code>openapi.json</code> 和示例代码（Python / Node.js / Go）。变更会写在这里，接口的兼容性变动我们会提前通知。
+  代理对接文档 · 兑换接口 v1。随附 <code>openapi.json</code> 和示例代码（Python / Node.js / Go / PHP）。每次更新都记在 <a href="#changelog">更新记录</a>，接口的兼容性变动我们会提前通知。
 </footer>
 </div>
 </body>
