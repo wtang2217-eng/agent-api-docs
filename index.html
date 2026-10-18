@@ -1,0 +1,1711 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<title>代理对接文档 · 兑换接口 v1</title>
+<script>document.documentElement.className += ' js'</script>
+<style>
+:root{
+  --bg:#ffffff;--surface:#ffffff;--surface-2:#f5f6f8;--surface-3:#eceef2;
+  --fg:#14171c;--fg-2:#4a5260;--fg-3:#6e7685;
+  --line:#e4e7ec;--line-2:#cdd2da;
+  --accent:#2556c4;--accent-bg:#eef3fd;
+  --ok:#17784a;--warn:#975f05;--err:#b3261e;
+  --code-bg:#f6f7f9;--code-fg:#1d2330;
+  --get:#0e7a6c;--post:#2556c4;
+  --t-p:#2556c4;--t-s:#0e7a6c;--t-n:#975f05;--t-k:#7a3db8;--t-c:#7c8494;
+  --top:56px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1115;--surface:#14171c;--surface-2:#1a1e24;--surface-3:#222731;
+    --fg:#e6e8ec;--fg-2:#a9b0bc;--fg-3:#808897;
+    --line:#262b33;--line-2:#383e48;
+    --accent:#86a9f5;--accent-bg:#18213a;
+    --ok:#5cc58c;--warn:#e2a443;--err:#f0857a;
+    --code-bg:#12151a;--code-fg:#dfe3ea;
+    --get:#5ec5b5;--post:#86a9f5;
+    --t-p:#8fb1f7;--t-s:#7ccfbf;--t-n:#e7b45e;--t-k:#c39bf2;--t-c:#7b8393;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--top) + 18px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15.5px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline;text-underline-offset:3px}
+code,pre{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+code{font-size:.87em;background:var(--surface-2);color:var(--code-fg);padding:.1em .38em;border-radius:5px;overflow-wrap:anywhere}
+a code{color:inherit}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:16px;top:12px;z-index:20;background:var(--surface);padding:6px 10px;border-radius:6px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.topbar{position:sticky;top:0;z-index:10;height:var(--top);background:var(--bg);background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1240px;height:100%;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--fg);font-weight:600;font-size:15px}
+.brand:hover{text-decoration:none}
+.ver{font:500 12px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:4px 7px;border:1px solid var(--line-2);border-radius:6px;color:var(--fg-2)}
+.toplinks{display:flex;gap:2px}
+.toplinks a{font-size:14px;color:var(--fg-2);padding:6px 10px;border-radius:7px}
+.toplinks a:hover{background:var(--surface-2);color:var(--fg);text-decoration:none}
+
+.layout{max-width:1240px;margin:0 auto;padding:0 24px 96px;display:grid;grid-template-columns:232px minmax(0,1fr);gap:0 56px}
+.side{position:sticky;top:var(--top);align-self:start;max-height:calc(100vh - var(--top));overflow:auto;padding:30px 4px 40px 0}
+.toc-box>summary{display:none}
+.toc{font-size:14px}
+.toc-g{margin:22px 0 6px;font-size:12px;color:var(--fg-3);letter-spacing:.04em}
+.toc-g:first-child{margin-top:0}
+.toc a{display:flex;align-items:center;gap:8px;color:var(--fg-2);padding:5px 10px;margin-left:-10px;border-radius:7px;line-height:1.45}
+.toc a:hover{background:var(--surface-2);color:var(--fg);text-decoration:none}
+.toc a[aria-current="true"]{background:var(--accent-bg);color:var(--accent)}
+.toc .mm{flex:none;width:34px;font:600 10.5px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em}
+.toc .mm.get{color:var(--get)} .toc .mm.post{color:var(--post)}
+.toc .p{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+
+main{min-width:0;max-width:880px;padding-top:8px}
+.hero{padding:44px 0 30px;border-bottom:1px solid var(--line);margin-bottom:40px}
+h1{font-size:clamp(30px,4.6vw,40px);line-height:1.2;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+.lead{max-width:64ch;margin:0 0 26px;color:var(--fg-2);font-size:16.5px}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;margin:0;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.facts div{background:var(--surface);padding:12px 16px;min-width:0}
+.facts dt{font-size:12.5px;color:var(--fg-3);margin:0 0 2px}
+.facts dd{margin:0;font-size:14.5px;overflow-wrap:anywhere}
+.facts dd code{background:none;padding:0;font-size:13.5px}
+
+section{margin:0 0 64px}
+h2{font-size:25px;line-height:1.3;margin:0 0 16px;font-weight:650;letter-spacing:-.005em}
+h3{font-size:18.5px;line-height:1.4;margin:38px 0 12px;font-weight:620}
+h2+h3{margin-top:22px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px;padding-left:1.35em}
+li{margin:5px 0}
+.label{margin:22px 0 8px;font-size:13.5px;font-weight:600;color:var(--fg-2)}
+.muted{color:var(--fg-3);font-size:14px}
+
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.6}
+th,td{text-align:left;vertical-align:top;padding:9px 14px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--fg-2);background:var(--surface-2);font-size:13px;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td:first-child{white-space:nowrap}
+td.ty{white-space:nowrap;color:var(--fg-3);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+td.c{white-space:nowrap;text-align:center}
+
+.code{margin:0 0 20px;border:1px solid var(--line);border-radius:10px;background:var(--code-bg);overflow:hidden}
+.code-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 8px 6px 14px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--fg-3)}
+.code-head button{font:inherit;color:var(--fg-2);background:transparent;border:1px solid var(--line-2);border-radius:6px;padding:2px 10px;cursor:pointer}
+.code-head button:hover{color:var(--fg);background:var(--surface)}
+pre{margin:0 0 20px;padding:14px 16px;background:var(--code-bg);color:var(--code-fg);border:1px solid var(--line);border-radius:10px;overflow:auto;font-size:13.2px;line-height:1.65;tab-size:4}
+.code pre{margin:0;border:0;border-radius:0}
+pre code{background:none;padding:0;font-size:inherit;color:inherit;overflow-wrap:normal}
+.t-p{color:var(--t-p)} .t-s{color:var(--t-s)} .t-n{color:var(--t-n)} .t-k{color:var(--t-k)} .t-c{color:var(--t-c)}
+
+.callout{border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface);border-radius:10px;padding:13px 18px;margin:0 0 20px}
+.callout>*:last-child{margin-bottom:0}
+.callout-t{margin:0 0 4px;font-size:13.5px;font-weight:600;color:var(--accent)}
+.callout.note{border-left-color:var(--warn)} .callout.note .callout-t{color:var(--warn)}
+.callout.warn{border-left-color:var(--err)} .callout.warn .callout-t{color:var(--err)}
+
+.endpoint{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:11px 14px;background:var(--surface-2);border-radius:10px}
+.endpoint>code{background:none;padding:0;font-size:15px}
+.m{font:700 11.5px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em;padding:5px 8px;border-radius:6px;border:1px solid currentColor}
+.m.get{color:var(--get)} .m.post{color:var(--post)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.chip{font-size:12.5px;line-height:1.4;padding:2px 9px;border-radius:99px;border:1px solid var(--line-2);color:var(--fg-2);background:var(--surface);white-space:nowrap}
+
+.steps{counter-reset:s;list-style:none;padding:0;margin:0 0 22px;display:grid;gap:10px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:14px;align-items:start;margin:0;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent-bg);color:var(--accent);font-weight:650;font-size:13.5px}
+.steps p{margin:0}
+.steps .st{font-weight:600;margin-bottom:2px}
+
+figure{margin:0 0 22px}
+.dw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px 10px 8px}
+.dw svg{display:block;width:100%;height:auto}
+.dw.seq svg{min-width:640px}
+.dw.states svg{min-width:560px;max-width:700px;margin:0 auto}
+figcaption{font-size:13.5px;color:var(--fg-3);margin-top:8px}
+.narrow-only{display:none}
+.sq-head rect,.st-box{fill:var(--surface-2);stroke:var(--line-2)}
+.sq-head text{fill:var(--fg);font-size:14px;font-weight:600}
+.sq-life{stroke:var(--line-2);stroke-dasharray:3 4}
+.sq-msg{stroke:var(--fg-2);stroke-width:1.4;fill:none}
+.sq-ret{stroke:var(--fg-3);stroke-width:1.2;stroke-dasharray:5 4;fill:none}
+.sq-t{fill:var(--fg);font-size:12.5px}
+.sq-r{fill:var(--fg-3);font-size:12px}
+.sq-mono,.st-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.sq-mono{fill:var(--accent)}
+.sq-loop{fill:none;stroke:var(--accent);stroke-dasharray:6 4}
+.sq-arrow{fill:var(--fg-2)}
+.st-run{stroke:var(--accent)} .st-ok{stroke:var(--ok)} .st-err{stroke:var(--err)} .st-rev{stroke:var(--warn)}
+.st-code{fill:var(--fg);font-weight:600}
+.st-sub{fill:var(--fg-3);font-size:12px}
+.st-line{stroke:var(--fg-3);stroke-width:1.3;fill:none}
+
+.tabs{margin:0 0 20px}
+.tab-list{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 14px;overflow-x:auto}
+.tab-list button{font:inherit;font-size:14px;color:var(--fg-2);background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tab-list button:hover{color:var(--fg)}
+.tab-list button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+html:not(.js) .tab-list{display:none}
+.js .tab-panel{display:none}
+.js .tab-panel.on{display:block}
+.panel-t{margin:0 0 8px;font-size:13.5px;color:var(--fg-3)}
+
+dl.faq dt{font-weight:600;margin:22px 0 6px}
+dl.faq dd{margin:0 0 6px;color:var(--fg)}
+footer{border-top:1px solid var(--line);padding-top:22px;color:var(--fg-3);font-size:13.5px}
+
+@media (max-width:1000px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:static;max-height:none;overflow:visible;padding:16px 0 0}
+  .toc-box{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+  .toc-box>summary{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;font-size:14.5px;font-weight:600;list-style:none}
+  .toc-box>summary::-webkit-details-marker{display:none}
+  .toc-box>summary::after{content:"";width:7px;height:7px;border-right:1.5px solid var(--fg-3);border-bottom:1.5px solid var(--fg-3);transform:rotate(45deg);margin:-4px 4px 0 0}
+  .toc-box[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+  .toc{padding:2px 16px 12px;columns:2;column-gap:24px}
+  .toc-g{break-after:avoid;margin-top:12px}
+  .toc a{break-inside:avoid}
+  .hero{padding-top:28px}
+}
+@media (max-width:640px){
+  body{font-size:15px}
+  .topbar-in,.layout{padding-left:16px;padding-right:16px}
+  .toplinks a{padding:6px 7px}
+  .toc{columns:1}
+  .facts{grid-template-columns:minmax(0,1fr)}
+  .narrow-only{display:inline}
+  .chips{margin-left:0}
+  .tw{border:0;background:transparent;overflow:visible}
+  .tw table,.tw tbody,.tw tr,.tw td{display:block;width:100%}
+  .tw tr:has(> th){display:none}
+  .tw tr{border:1px solid var(--line);border-radius:10px;background:var(--surface);margin:0 0 10px;padding:8px 14px}
+  .tw td,.tw td:first-child,.tw td.ty,.tw td.c{border:0;padding:3px 0;white-space:normal;text-align:left}
+  .tw td:first-child{font-weight:600;padding-bottom:4px}
+  .tw td[data-label]:not(:first-child)::before{content:attr(data-label);display:inline-block;min-width:4.6em;margin-right:8px;color:var(--fg-3);font-size:12.5px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-style:normal}
+}
+@media print{
+  :root{--bg:#fff;--surface:#fff;--surface-2:#f4f5f7;--surface-3:#eceef2;--fg:#000;--fg-2:#333;--fg-3:#555;--line:#ccc;--line-2:#aaa;--accent:#1a4f9e;--accent-bg:#eef3fd;--code-bg:#f6f7f9;--code-fg:#000;--get:#16655b;--post:#1a4f9e;--ok:#1e7a49;--warn:#965f00;--err:#b0302e;--t-p:#1a4f9e;--t-s:#16655b;--t-n:#965f00;--t-k:#6b3aa6;--t-c:#666}
+  body{font-size:12.5px;line-height:1.6;background:#fff}
+  .topbar,.side,.skip,.code-head button,.tab-list{display:none!important}
+  .layout{display:block;max-width:none;padding:0}
+  main{max-width:none;padding:0}
+  .hero{padding:0 0 16px;margin-bottom:22px}
+  h1{font-size:28px}
+  section{margin-bottom:30px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:10.5px}
+  .tab-panel,.js .tab-panel{display:block!important;margin-bottom:12px}
+  .tw,.dw{overflow:visible}
+  .dw svg,.dw.seq svg,.dw.states svg{min-width:0}
+  .narrow-only{display:none}
+  table{font-size:11.5px;table-layout:auto}
+  th{white-space:nowrap}
+  td,td:first-child{white-space:normal;overflow-wrap:break-word}
+  td code{white-space:nowrap;overflow-wrap:normal}
+  #changelog td:first-child{white-space:nowrap}
+  h2,h3,.label,.panel-t{break-after:avoid}
+  tr,.callout,.endpoint,.steps li,figure,.facts div,dl.faq dd{break-inside:avoid}
+  a{color:inherit}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#top">兑换接口 <span class="ver">v1</span></a>
+    <nav class="toplinks" aria-label="资料">
+      <a href="代理对接文档.pdf">PDF</a>
+      <a href="openapi.json">OpenAPI</a>
+      <a href="https://github.com/wtang2217-eng/agent-api-docs">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="layout">
+<aside class="side">
+  <details class="toc-box" open>
+  <summary>目录</summary>
+  <nav class="toc" aria-label="目录">
+    <p class="toc-g">开始</p>
+    <a href="#overview">概述</a>
+    <a href="#flow">兑换流程</a>
+    <a href="#start">接入准备</a>
+    <a href="#terms">使用约定</a>
+    <a href="#conventions">通用约定</a>
+    <p class="toc-g">接口</p>
+    <a href="#ping"><span class="mm get">GET</span><span class="p">/ping</span></a>
+    <a href="#query"><span class="mm post">POST</span><span class="p">/cdk/query</span></a>
+    <a href="#verify"><span class="mm post">POST</span><span class="p">/redeem/verify</span></a>
+    <a href="#redeem"><span class="mm post">POST</span><span class="p">/redeem</span></a>
+    <a href="#order"><span class="mm get">GET</span><span class="p">/orders/{order_no}</span></a>
+    <a href="#lookup"><span class="mm post">POST</span><span class="p">/orders/lookup</span></a>
+    <p class="toc-g">参考</p>
+    <a href="#status">订单状态与失败处理</a>
+    <a href="#errors">错误码</a>
+    <a href="#example">示例代码</a>
+    <p class="toc-g">上线</p>
+    <a href="#checklist">联调与上线检查</a>
+    <a href="#faq">常见问题</a>
+    <a href="#changelog">更新记录</a>
+  </nav>
+  </details>
+</aside>
+
+<main id="main">
+<header class="hero" id="top">
+  <h1>代理对接文档</h1>
+  <p class="lead">兑换接口供代理的服务器调用，用于查询卡密、核对买家账号、提交兑换和查询订单结果。买家在你自己的页面上操作，不需要访问我们的网站。</p>
+  <dl class="facts">
+    <div><dt>接口地址</dt><dd><code>https://recharge.chongplus.store/api/open/v1</code></dd></div>
+    <div><dt>认证</dt><dd><code>Authorization: Bearer &lt;API 密钥&gt;</code></dd></div>
+    <div><dt>格式</dt><dd>HTTPS，JSON（UTF-8），服务器之间调用</dd></div>
+    <div><dt>版本</dt><dd>v1 · 2026-10-17 修订（<a href="#changelog">更新记录</a>）</dd></div>
+  </dl>
+</header>
+
+<section id="overview">
+  <h2>1. 概述</h2>
+  <p>接口共 6 个，都需要 API 密钥。完成一次兑换按顺序调用其中 4 个；<code>GET /ping</code> 用于联调，<code>POST /orders/lookup</code> 用于找回订单。</p>
+  <div class="tw"><table>
+    <tr><th>方法与路径</th><th>用途</th><th>卡密</th></tr>
+    <tr><td><a href="#ping"><code>GET /ping</code></a></td><td>验证密钥，查看来源 IP 和限额</td><td>不涉及</td></tr>
+    <tr><td><a href="#query"><code>POST /cdk/query</code></a></td><td>查询卡密的套餐和状态</td><td>不消耗</td></tr>
+    <tr><td><a href="#verify"><code>POST /redeem/verify</code></a></td><td>核对买家账号，取得核对票据</td><td>不消耗</td></tr>
+    <tr><td><a href="#redeem"><code>POST /redeem</code></a></td><td>提交兑换，取得订单号</td><td>锁定</td></tr>
+    <tr><td><a href="#order"><code>GET /orders/{order_no}</code></a></td><td>查询订单状态和结果</td><td>不涉及</td></tr>
+    <tr><td><a href="#lookup"><code>POST /orders/lookup</code></a></td><td>按卡密找回订单</td><td>不涉及</td></tr>
+  </table></div>
+  <p>另附 OpenAPI 3.0 描述文件 <code>openapi.json</code>，可以导入 Apifox、Postman 等工具，其中的字段、取值和错误码与本文档一致。</p>
+</section>
+
+<section id="flow">
+  <h2>2. 兑换流程</h2>
+  <ol class="steps">
+    <li><div><p class="st">查询卡密（可选）</p><p>买家粘贴卡密后调用 <code>POST /cdk/query</code>，得到套餐和卡密状态。不消耗卡密。</p></div></li>
+    <li><div><p class="st">核对账号</p><p>买家提交 ChatGPT 账号的 Session 后调用 <code>POST /redeem/verify</code>。耗时约 10 秒，通过后得到核对票据 <code>ticket</code>，10 分钟内有效。</p></div></li>
+    <li><div><p class="st">提交兑换</p><p>买家确认后调用 <code>POST /redeem</code>，传入 <code>ticket</code> 和你生成的幂等号 <code>idempotency_key</code>，得到订单号 <code>order_no</code>。卡密从这一步开始锁定。</p></div></li>
+    <li><div><p class="st">查询结果</p><p>按返回的 <code>poll_after</code> 秒数轮询 <code>GET /orders/{order_no}</code>，直到 <code>status</code> 为 <code>succeeded</code>（已开通）或 <code>failed</code>（失败），通常需要 1–3 分钟。</p></div></li>
+  </ol>
+  <figure>
+    <div class="dw seq">
+    <svg viewBox="0 0 760 470" role="img" aria-labelledby="sq-title">
+      <title id="sq-title">一次兑换中买家、你的系统和兑换接口之间的请求顺序</title>
+      <defs><marker id="sq-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="sq-arrow" d="M0 0 L10 5 L0 10 z"/></marker></defs>
+      <g class="sq-head">
+        <rect x="40" y="10" width="140" height="36" rx="8"/><text x="110" y="33" text-anchor="middle">买家</text>
+        <rect x="300" y="10" width="160" height="36" rx="8"/><text x="380" y="33" text-anchor="middle">你的系统</text>
+        <rect x="570" y="10" width="160" height="36" rx="8"/><text x="650" y="33" text-anchor="middle">兑换接口</text>
+      </g>
+      <line class="sq-life" x1="110" y1="46" x2="110" y2="460"/>
+      <line class="sq-life" x1="380" y1="46" x2="380" y2="460"/>
+      <line class="sq-life" x1="650" y1="46" x2="650" y2="460"/>
+
+      <line class="sq-msg" x1="110" y1="80" x2="374" y2="80" marker-end="url(#sq-arr)"/><text class="sq-t" x="120" y="72">粘贴卡密</text>
+      <line class="sq-msg" x1="380" y1="104" x2="644" y2="104" marker-end="url(#sq-arr)"/><text class="sq-mono" x="392" y="96">POST /cdk/query</text>
+      <line class="sq-ret" x1="650" y1="128" x2="386" y2="128" marker-end="url(#sq-arr)"/><text class="sq-r" x="392" y="122">套餐、卡密状态</text>
+
+      <line class="sq-msg" x1="110" y1="170" x2="374" y2="170" marker-end="url(#sq-arr)"/><text class="sq-t" x="120" y="162">提交账号 Session</text>
+      <line class="sq-msg" x1="380" y1="194" x2="644" y2="194" marker-end="url(#sq-arr)"/><text class="sq-mono" x="392" y="186">POST /redeem/verify（约 10 秒）</text>
+      <line class="sq-ret" x1="650" y1="218" x2="386" y2="218" marker-end="url(#sq-arr)"/><text class="sq-r" x="392" y="212">ticket（10 分钟内有效）</text>
+
+      <line class="sq-msg" x1="110" y1="260" x2="374" y2="260" marker-end="url(#sq-arr)"/><text class="sq-t" x="120" y="252">确认兑换</text>
+      <line class="sq-msg" x1="380" y1="284" x2="644" y2="284" marker-end="url(#sq-arr)"/><text class="sq-mono" x="392" y="276">POST /redeem（ticket + 幂等号）</text>
+      <line class="sq-ret" x1="650" y1="308" x2="386" y2="308" marker-end="url(#sq-arr)"/><text class="sq-r" x="392" y="302">order_no，开通中</text>
+
+      <rect class="sq-loop" x="300" y="330" width="440" height="88" rx="8"/><text class="sq-r" x="310" y="347">每隔 poll_after 秒，直到出结果</text>
+      <line class="sq-msg" x1="380" y1="372" x2="644" y2="372" marker-end="url(#sq-arr)"/><text class="sq-mono" x="392" y="364">GET /orders/{order_no}</text>
+      <line class="sq-ret" x1="650" y1="398" x2="386" y2="398" marker-end="url(#sq-arr)"/><text class="sq-r" x="392" y="392">succeeded / failed，附 message</text>
+
+      <line class="sq-ret" x1="380" y1="440" x2="116" y2="440" marker-end="url(#sq-arr)"/><text class="sq-r" x="124" y="434">显示 message</text>
+    </svg>
+    </div>
+    <figcaption>一次兑换的请求顺序。实线是请求，虚线是返回。<span class="narrow-only">图可以左右滑动查看。</span></figcaption>
+  </figure>
+  <div class="callout note">
+    <p class="callout-t">注意</p>
+    <p>请求超时或没有收到响应时，用同一个 <code>idempotency_key</code> 和同一张 <code>ticket</code> 重发，或者调用 <code>POST /orders/lookup</code> 找回订单，不会重复兑换。不要换新的幂等号，也不要重新核对后再提交。完整规则见 <a href="#retry">重试规则</a>。</p>
+  </div>
+</section>
+
+<section id="start">
+  <h2>3. 接入准备</h2>
+  <p>开通时我们会提供以下信息：</p>
+  <div class="tw"><table>
+    <tr><th>项目</th><th>说明</th></tr>
+    <tr><td>接口地址</td><td><code>https://recharge.chongplus.store/api/open/v1</code>，下文写作 <code>{BASE}</code>。</td></tr>
+    <tr><td>API 密钥</td><td><code>cpa_</code> 开头，共 47 个字符。只在创建时显示一次，遗失后需要停用并重新申请。</td></tr>
+    <tr><td>来源 IP</td><td>你的服务器出口 IP 或 IP 段。登记后，这把密钥只接受来自这些地址的请求。调用 <a href="#ping"><code>GET /ping</code></a> 可以看到接口识别到的来源 IP；请求因来源 IP 被拒绝时，<code>ip_not_allowed</code> 的 <code>error.details.ip</code> 也是这个地址。</td></tr>
+  </table></div>
+  <div class="callout warn">
+    <p class="callout-t">警告</p>
+    <ul>
+      <li>密钥只保存在服务器端（环境变量或密钥管理服务），不要写进网页、App 或任何前端代码，也不要发到聊天群或工单里。</li>
+      <li>接口只接受服务器之间的调用，不支持浏览器直接请求（不放行跨域请求）。</li>
+      <li>只使用 <code>https://</code>。如果曾经用 <code>http://</code> 发送过密钥，按已泄露处理：联系我们停用并更换。</li>
+      <li>买家的 Session 等同于账号的登录凭证，只在本次请求中使用，不要保存，不要写进日志。</li>
+      <li>怀疑密钥泄露时，联系我们停用，停用立即生效。</li>
+      <li>用错误的密钥或从未登记的 IP 反复请求，来源 IP 会被临时封锁 10 分钟。</li>
+    </ul>
+  </div>
+  <h3 id="terms">使用约定</h3>
+  <p>使用本接口即表示同意以下约定：</p>
+  <ul>
+    <li>本接口只提供兑换能力，买家使用的页面、文案和样式由你自行设计制作。</li>
+    <li>不得复制、仿制或套用我们网站的页面、样式、图片、视频和教程；不得用 iframe 嵌入我们的网站，也不得用自己的域名转发（镜像）我们的网站。</li>
+    <li>失败的订单只能由买家本人发起重试，你的程序不得自动重新提交，原因见 <a href="#resubmit">失败后重新提交</a>。</li>
+    <li>密钥只供你自己的系统使用，不得转借或转卖。</li>
+    <li>订单结果以本接口的返回为准。</li>
+    <li>违反以上任何一条，我们将停用密钥。</li>
+  </ul>
+</section>
+
+<section id="conventions">
+  <h2>4. 通用约定</h2>
+  <h3>请求</h3>
+  <ul>
+    <li>HTTPS，JSON（UTF-8）。POST 请求带 <code>Content-Type: application/json</code>，请求体不超过 128 KB。</li>
+    <li>认证：每个请求带 <code>Authorization: Bearer &lt;API 密钥&gt;</code>。</li>
+    <li><code>User-Agent</code> 填写你自己系统的名称，例如 <code>my-shop/1.0</code>。部分语言和库的默认值会被网关拒绝，例如 Python 的 urllib 和 pycurl、Java 8 及更早版本、Perl 的 LWP。被拒绝时返回 HTTP 403，响应只有一行纯文本 <code>error code: 1010</code>（不是 JSON），请求没有到达接口。</li>
+    <li>超时时间设为 60 秒以上，核对账号一步约需 10 秒。</li>
+  </ul>
+  <h3>响应</h3>
+  <p>所有响应都是 JSON。成功时 HTTP 200，<code>ok</code> 为 <code>true</code>：</p>
+<pre><code>{
+  "ok": true,
+  "data": { ... },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+  <p>失败时 <code>ok</code> 为 <code>false</code>，HTTP 状态码见下表：</p>
+<pre><code>{
+  "ok": false,
+  "error": {
+    "code": "cdk_used",
+    "message": "卡密已兑换或已使用",
+    "retryable": false,
+    "cdk_state": "used",
+    "details": { "order_no": "OD3F9A1C07B2D4E5" }
+  },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+  <div class="tw"><table>
+    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+    <tr><td><code>ok</code></td><td class="ty">boolean</td><td>请求是否成功。</td></tr>
+    <tr><td><code>data</code></td><td class="ty">object</td><td>成功时的返回内容，各接口不同。</td></tr>
+    <tr><td><code>error.code</code></td><td class="ty">string</td><td>错误码，取值固定，程序按它判断。全部取值见 <a href="#errors">错误码</a>。</td></tr>
+    <tr><td><code>error.message</code></td><td class="ty">string</td><td>面向买家的中文说明，可以直接展示；需要自定义文案时按 <code>error.code</code> 判断。</td></tr>
+    <tr><td><code>error.retryable</code></td><td class="ty">boolean</td><td>同样的操作稍后能否再试。具体怎样重试以各接口的说明为准，有的需要重新核对账号。</td></tr>
+    <tr><td><code>error.retry_after</code></td><td class="ty">integer</td><td>建议等待的秒数，同时放在 <code>Retry-After</code> 响应头中。只在需要等待的错误中出现。</td></tr>
+    <tr><td><code>error.cdk_state</code></td><td class="ty">string</td><td>这一步之后卡密的状态，取值见 <a href="#cdk-state">卡密状态</a>。不一定出现。</td></tr>
+    <tr><td><code>error.details</code></td><td class="ty">object</td><td>附加信息，不一定出现：<code>order_no</code> 表示卡密已被你这把密钥提交过，可以用 <code>GET /orders/{order_no}</code> 查询；<code>ip</code> 只在 <code>ip_not_allowed</code> 时出现，是接口识别到的来源 IP。</td></tr>
+    <tr><td><code>trace_id</code></td><td class="ty">string</td><td>每个响应都有。联系我们排查问题时请提供。</td></tr>
+  </table></div>
+  <h3>HTTP 状态码</h3>
+  <div class="tw"><table>
+    <tr><th>状态码</th><th>含义</th></tr>
+    <tr><td>200</td><td>成功（<code>ok</code> 为 <code>true</code>）。</td></tr>
+    <tr><td>400</td><td>请求格式错误（<code>bad_request</code>），或 Session 格式错误（<code>session_format</code>）。</td></tr>
+    <tr><td>401 / 403</td><td>密钥无效或已停用（<code>invalid_key</code>）/ 来源 IP 不在登记名单中（<code>ip_not_allowed</code>）。</td></tr>
+    <tr><td>404</td><td>接口、核对票据或订单不存在。</td></tr>
+    <tr><td>409</td><td>当前状态不允许这个操作，例如卡密已使用、核对已过期、票据已提交过、账号需要等待。</td></tr>
+    <tr><td>422</td><td>请求格式正确，但内容未通过校验，例如卡密无效、Session 已失效。</td></tr>
+    <tr><td>429</td><td>请求过于频繁、同时处理的订单过多或系统繁忙，按 <code>Retry-After</code> 等待后重试。</td></tr>
+    <tr><td>500 / 503</td><td>服务暂时无法处理，稍后重试。</td></tr>
+  </table></div>
+  <h3>限额</h3>
+  <ul>
+    <li>每把密钥有两个上限：每分钟请求数和同时处理中的订单数，默认 60 次/分钟和 5 单，以 <code>GET /ping</code> 返回的 <code>limits</code> 为准，需要调整请联系我们。超出时返回 429（<code>rate_limited</code> 或 <code>too_many_inflight</code>）。</li>
+    <li>高峰期或请求过密时，可能临时返回 429 <code>busy</code>，按 <code>Retry-After</code> 稍后重试即可，与密钥本身无关。</li>
+  </ul>
+  <h3>时间格式</h3>
+  <p>所有时间都是 RFC 3339 格式的 UTC 时间，例如 <code>2026-10-05T09:00:00Z</code>。</p>
+</section>
+
+<section id="endpoints">
+  <h2>5. 接口</h2>
+  <p>下文示例中，<code>{BASE}</code> 是接口地址，<code>$KEY</code> 是你的密钥，卡密用 <code>XXXXXXXXXXXX-XXXXXXXXXXXX-XXXXXXXXXXXX</code> 代替。</p>
+
+  <h3 id="ping">GET /ping</h3>
+  <div class="endpoint"><span class="m get">GET</span><code>/ping</code><span class="chips"><span class="chip">联调</span></span></div>
+  <p>验证密钥是否有效，返回密钥名称、接口识别到的来源 IP 和限额。登记来源 IP 时以这里返回的 <code>ip</code> 为准。没有请求体。</p>
+  <p class="label">响应字段</p>
+  <div class="tw"><table>
+    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+    <tr><td><code>name</code></td><td class="ty">string</td><td>密钥名称。</td></tr>
+    <tr><td><code>ip</code></td><td class="ty">string</td><td>接口识别到的来源 IP。</td></tr>
+    <tr><td><code>server_time</code></td><td class="ty">string</td><td>服务器当前时间。</td></tr>
+    <tr><td><code>limits.rate_per_min</code></td><td class="ty">integer</td><td>每分钟请求上限。</td></tr>
+    <tr><td><code>limits.max_inflight</code></td><td class="ty">integer</td><td>同时处理中的订单上限。</td></tr>
+  </table></div>
+  <p class="label">示例</p>
+<pre><code>curl {BASE}/ping -H "Authorization: Bearer $KEY" -H "User-Agent: my-shop/1.0"</code></pre>
+<pre><code>{
+  "ok": true,
+  "data": {
+    "name": "代理甲",
+    "ip": "203.0.113.10",
+    "server_time": "2026-10-05T09:00:00Z",
+    "limits": { "rate_per_min": 60, "max_inflight": 5 }
+  },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+  <p class="label">可能的错误</p>
+  <p><code>invalid_key</code>、<code>ip_not_allowed</code>、<code>too_many_failures</code>、<code>rate_limited</code>、<code>service_disabled</code>，说明见 <a href="#errors">错误码</a>。</p>
+
+  <h3 id="query">POST /cdk/query</h3>
+  <div class="endpoint"><span class="m post">POST</span><code>/cdk/query</code><span class="chips"><span class="chip">只读</span><span class="chip">不消耗卡密</span></span></div>
+  <p>查询卡密对应的套餐和当前状态，不需要买家的账号信息。同一张卡密 60 秒内重复查询，可能返回缓存结果。</p>
+  <p>如果这张卡密已经由你这把密钥提交过订单：订单还在处理时返回 <code>cdk_not_usable</code>，已兑换成功时返回 <code>cdk_used</code>，两种情况都在 <code>error.details.order_no</code> 中给出订单号。</p>
+  <p class="label">请求字段</p>
+  <div class="tw"><table>
+    <tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr>
+    <tr><td><code>cdk</code></td><td class="ty">string</td><td class="c">是</td><td>卡密。不区分大小写，首尾空格会被忽略。</td></tr>
+  </table></div>
+  <p class="label">响应字段</p>
+  <div class="tw"><table>
+    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+    <tr><td><code>plan</code></td><td class="ty">string</td><td>套餐代号，取值见下表。</td></tr>
+    <tr><td><code>plan_name</code></td><td class="ty">string</td><td>套餐名称，可以直接展示。</td></tr>
+    <tr><td><code>cdk_state</code></td><td class="ty">string</td><td>卡密状态，见 <a href="#cdk-state">卡密状态</a>。</td></tr>
+  </table></div>
+  <div class="tw"><table>
+    <tr><th><code>plan</code></th><th><code>plan_name</code></th></tr>
+    <tr><td><code>go</code></td><td>Go</td></tr>
+    <tr><td><code>plus</code></td><td>Plus</td></tr>
+    <tr><td><code>pro-5x</code></td><td>Pro 5x</td></tr>
+    <tr><td><code>pro-20x</code></td><td>Pro 20x</td></tr>
+    <tr><td><code>pro-max</code></td><td>Pro Max</td></tr>
+    <tr><td><code>other</code></td><td>ChatGPT 套餐。以后新增的套餐会先使用这个取值，程序不需要因此修改。</td></tr>
+  </table></div>
+  <p class="label">示例</p>
+<pre><code>curl -X POST {BASE}/cdk/query -H "Authorization: Bearer $KEY" -H "User-Agent: my-shop/1.0" \
+  -H "Content-Type: application/json" \
+  -d '{"cdk":"XXXXXXXXXXXX-XXXXXXXXXXXX-XXXXXXXXXXXX"}'</code></pre>
+<pre><code>{
+  "ok": true,
+  "data": { "plan": "pro-5x", "plan_name": "Pro 5x", "cdk_state": "available" },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+  <p class="label">可能的错误</p>
+  <div class="tw"><table>
+    <tr><th>错误码</th><th>场景</th><th>处理</th></tr>
+    <tr><td><code>cdk_invalid</code></td><td>卡密格式不对或不存在</td><td>请买家核对卡密。</td></tr>
+    <tr><td><code>cdk_used</code></td><td>卡密已兑换</td><td><code>error.details.order_no</code> 有值时，是你这把密钥提交的订单，查询该订单。</td></tr>
+    <tr><td><code>cdk_not_usable</code></td><td>暂时不能使用：已停用、已冻结或正在处理</td><td><code>error.details.order_no</code> 有值时，是你这把密钥提交的订单仍在处理，查询该订单；否则请买家联系你，必要时联系我们。</td></tr>
+    <tr><td><code>busy</code> / <code>service_unavailable</code> / <code>try_later</code></td><td>系统繁忙或暂时不可用</td><td>稍后重试。</td></tr>
+  </table></div>
+
+  <h3 id="verify">POST /redeem/verify</h3>
+  <div class="endpoint"><span class="m post">POST</span><code>/redeem/verify</code><span class="chips"><span class="chip">约 10 秒</span><span class="chip">不消耗卡密</span></span></div>
+  <p>核对买家的账号能否兑换这张卡密，通过后返回核对票据 <code>ticket</code>。这一步约需 10 秒，请把超时设为 60 秒以上。</p>
+  <p class="label">请求字段</p>
+  <div class="tw"><table>
+    <tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr>
+    <tr><td><code>cdk</code></td><td class="ty">string</td><td class="c">是</td><td>卡密。</td></tr>
+    <tr><td><code>session</code></td><td class="ty">string / object</td><td class="c">是</td><td>买家的整页 Session，可以是字符串，也可以是 JSON 对象。</td></tr>
+  </table></div>
+  <div class="callout">
+    <p class="callout-t">提示</p>
+    <p>获取 Session：让买家在已登录 ChatGPT 的浏览器中打开 <code>https://chatgpt.com/api/auth/session</code>，复制页面上的全部内容（以 <code>{</code> 开头，包含 <code>accessToken</code>）。只复制其中的 token，或者提供邮箱和密码，都会返回 <code>session_format</code>。</p>
+  </div>
+  <p class="label">示例</p>
+<pre><code>curl -X POST {BASE}/redeem/verify -H "Authorization: Bearer $KEY" -H "User-Agent: my-shop/1.0" \
+  -H "Content-Type: application/json" \
+  -d '{"cdk":"XXXXXXXXXXXX-XXXXXXXXXXXX-XXXXXXXXXXXX","session":"{\"user\":{...},\"accessToken\":\"...\"}"}'</code></pre>
+  <p>账号可以兑换：</p>
+<pre><code>{
+  "ok": true,
+  "data": {
+    "eligible": true,
+    "ticket": "tk_3f9a1c07b2d4e5a6b7c8d9e0f1a2b3c4",
+    "expires_at": "2026-10-05T09:10:00Z",
+    "plan": "pro-5x",
+    "plan_name": "Pro 5x",
+    "account": {
+      "email": "bu***@example.com",
+      "current_plan": "free",
+      "current_plan_name": "Free",
+      "has_active_plan": false
+    }
+  },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+  <p>账号已有生效中的套餐，不能叠加。此时 HTTP 仍为 200，但 <code>eligible</code> 为 <code>false</code>，没有 <code>ticket</code>：</p>
+<pre><code>{
+  "ok": true,
+  "data": {
+    "eligible": false,
+    "reason": "account_has_plan",
+    "message": "这个账号已有生效中的套餐，不能叠加，请换一个账号。卡密未消耗",
+    "plan": "pro-5x",
+    "plan_name": "Pro 5x",
+    "account": {
+      "email": "bu***@example.com",
+      "current_plan": "plus",
+      "current_plan_name": "Plus",
+      "has_active_plan": true
+    }
+  },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+  <p class="label">响应字段</p>
+  <div class="tw"><table>
+    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+    <tr><td><code>eligible</code></td><td class="ty">boolean</td><td>为 <code>true</code> 时才有 <code>ticket</code>。为 <code>false</code> 时请买家换一个账号，卡密没有消耗。</td></tr>
+    <tr><td><code>ticket</code></td><td class="ty">string</td><td>核对票据，在 <code>expires_at</code> 之前有效（10 分钟），只能用于一次兑换。过期后重新核对。</td></tr>
+    <tr><td><code>expires_at</code></td><td class="ty">string</td><td>票据的过期时间。</td></tr>
+    <tr><td><code>reason</code></td><td class="ty">string</td><td>只在 <code>eligible</code> 为 <code>false</code> 时出现，目前只有 <code>account_has_plan</code>。</td></tr>
+    <tr><td><code>message</code></td><td class="ty">string</td><td>只在 <code>eligible</code> 为 <code>false</code> 时出现，面向买家的说明，可以直接展示。</td></tr>
+    <tr><td><code>plan</code> / <code>plan_name</code></td><td class="ty">string</td><td>卡密对应的套餐，取值见 <a href="#query">POST /cdk/query</a>。</td></tr>
+    <tr><td><code>account.email</code></td><td class="ty">string</td><td>打码后的账号邮箱，供买家确认账号。</td></tr>
+    <tr><td><code>account.current_plan</code></td><td class="ty">string</td><td>账号当前的套餐：<code>free</code>，或者 <code>plan</code> 的取值之一。</td></tr>
+    <tr><td><code>account.current_plan_name</code></td><td class="ty">string</td><td>账号当前套餐的名称。</td></tr>
+    <tr><td><code>account.has_active_plan</code></td><td class="ty">boolean</td><td>账号当前是否有生效中的套餐。为 <code>true</code> 时 <code>eligible</code> 为 <code>false</code>。</td></tr>
+  </table></div>
+  <p class="label">可能的错误</p>
+  <div class="tw"><table>
+    <tr><th>错误码</th><th>场景</th><th>处理</th></tr>
+    <tr><td><code>session_format</code></td><td>Session 不是整页内容，缺少 <code>accessToken</code> 等</td><td>请买家按上面的方法重新复制。</td></tr>
+    <tr><td><code>session_invalid</code></td><td>账号登录已失效</td><td>请买家重新登录后再复制一次。</td></tr>
+    <tr><td><code>cdk_invalid</code> / <code>cdk_used</code> / <code>cdk_not_usable</code></td><td>卡密的问题</td><td>同 <a href="#query">POST /cdk/query</a>。</td></tr>
+    <tr><td><code>wait_before_retry</code></td><td>这个账号刚失败过，需要等待，响应带 <code>retry_after</code></td><td>等待 <code>retry_after</code> 秒后重新核对。</td></tr>
+    <tr><td><code>account_not_eligible</code></td><td>这个账号当前不能充值这个套餐</td><td>请买家换一个账号。</td></tr>
+    <tr><td><code>request_rejected</code></td><td>请求未通过</td><td>请买家核对卡密和账号后重试。</td></tr>
+    <tr><td><code>busy</code> / <code>service_unavailable</code> / <code>try_later</code></td><td>系统繁忙或暂时不可用</td><td>稍后重新核对。</td></tr>
+  </table></div>
+
+  <h3 id="redeem">POST /redeem</h3>
+  <div class="endpoint"><span class="m post">POST</span><code>/redeem</code><span class="chips"><span class="chip">幂等</span><span class="chip">锁定卡密</span></span></div>
+  <p>用核对票据提交兑换。接口立即返回订单，开通在后台进行。卡密从这一步开始锁定。</p>
+  <p class="label">请求字段</p>
+  <div class="tw"><table>
+    <tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr>
+    <tr><td><code>ticket</code></td><td class="ty">string</td><td class="c">是</td><td><code>POST /redeem/verify</code> 返回的票据。</td></tr>
+    <tr><td><code>idempotency_key</code></td><td class="ty">string</td><td class="c">是</td><td>幂等号，8–64 位，可以使用字母、数字和 <code>. _ : -</code>。每次新的兑换使用新值，建议用你系统中的订单号或 UUID；同一次兑换的所有重试使用同一个值。</td></tr>
+  </table></div>
+  <p class="label">示例</p>
+<pre><code>curl -X POST {BASE}/redeem -H "Authorization: Bearer $KEY" -H "User-Agent: my-shop/1.0" \
+  -H "Content-Type: application/json" \
+  -d '{"ticket":"tk_3f9a1c07b2d4e5a6b7c8d9e0f1a2b3c4","idempotency_key":"order-20261005-000123"}'</code></pre>
+<pre><code>{
+  "ok": true,
+  "data": {
+    "order_no": "OD3F9A1C07B2D4E5",
+    "status": "processing",
+    "cdk_state": "held",
+    "plan": "pro-5x",
+    "plan_name": "Pro 5x",
+    "buyer_email": "bu***@example.com",
+    "message": "开通中，通常 1–3 分钟。请不要重复提交。卡密已锁定。",
+    "created_at": "2026-10-05T09:02:11Z",
+    "updated_at": "2026-10-05T09:02:11Z",
+    "poll_after": 8
+  },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+  <p>返回的是订单对象，字段说明见 <a href="#order">GET /orders/{order_no}</a>。</p>
+  <h3 id="retry">重试规则</h3>
+  <div class="tw"><table>
+    <tr><th>情况</th><th>处理</th></tr>
+    <tr><td>请求超时、连接中断、没有收到响应，或返回 5xx</td><td>用同一个 <code>idempotency_key</code> 和同一张 <code>ticket</code> 重发，返回的是同一张订单，不会重复兑换。也可以调用 <a href="#lookup"><code>POST /orders/lookup</code></a> 按卡密找回订单。不要换新的幂等号，也不要重新核对后再提交。</td></tr>
+    <tr><td>返回 <code>busy</code>、<code>too_many_inflight</code>、<code>service_unavailable</code>、<code>try_later</code></td><td>这次提交没有执行，票据仍然有效。等待 <code>retry_after</code> 秒（没有时等几秒）后，用同一张票据和同一个幂等号重发。</td></tr>
+    <tr><td>返回其他错误，例如 <code>wait_before_retry</code>、<code>ticket_expired</code>、<code>session_invalid</code>、<code>account_has_plan</code>、<code>cdk_used</code>、<code>cdk_not_usable</code>、<code>request_rejected</code></td><td>票据已失效。先处理问题（等待、换账号或重新复制 Session），再从 <a href="#verify"><code>POST /redeem/verify</code></a> 重新开始，并使用新的幂等号。</td></tr>
+    <tr><td>返回 <code>ticket_used</code></td><td>这张票据已经提交过，<code>error.details.order_no</code> 是对应的订单，直接查询该订单。换新的幂等号也不会产生新订单。</td></tr>
+    <tr><td>返回 <code>idempotency_key_reused</code></td><td>这个幂等号已经和另一张票据一起用过，换一个新的。</td></tr>
+  </table></div>
+
+  <h3 id="order">GET /orders/{order_no}</h3>
+  <div class="endpoint"><span class="m get">GET</span><code>/orders/{order_no}</code><span class="chips"><span class="chip">轮询</span></span></div>
+  <p>查询订单的当前状态。<code>order_no</code> 是 <code>POST /redeem</code> 返回的订单号。只能查询你这把密钥提交的订单，其他订单一律返回 404。</p>
+  <p class="label">响应字段</p>
+  <div class="tw"><table>
+    <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+    <tr><td><code>order_no</code></td><td class="ty">string</td><td>订单号。</td></tr>
+    <tr><td><code>status</code></td><td class="ty">string</td><td>订单状态：<code>processing</code>、<code>succeeded</code>、<code>failed</code>、<code>under_review</code>，见 <a href="#status">订单状态与失败处理</a>。</td></tr>
+    <tr><td><code>cdk_state</code></td><td class="ty">string</td><td>卡密当前的状态：<code>available</code>、<code>held</code>、<code>used</code>。</td></tr>
+    <tr><td><code>plan</code> / <code>plan_name</code></td><td class="ty">string</td><td>套餐，取值见 <a href="#query">POST /cdk/query</a>。</td></tr>
+    <tr><td><code>buyer_email</code></td><td class="ty">string</td><td>打码后的买家账号邮箱。</td></tr>
+    <tr><td><code>message</code></td><td class="ty">string</td><td>订单当前情况，面向买家的中文说明，末尾说明卡密是否消耗。</td></tr>
+    <tr><td><code>created_at</code> / <code>updated_at</code></td><td class="ty">string</td><td>提交时间 / 最近更新时间。</td></tr>
+    <tr><td><code>finished_at</code></td><td class="ty">string</td><td>结束时间，只在 <code>succeeded</code>、<code>failed</code> 时出现。</td></tr>
+    <tr><td><code>failure.code</code> / <code>failure.action</code></td><td class="ty">string</td><td>只在 <code>failed</code> 时出现：失败原因和建议的处理方式，见 <a href="#failure">失败原因</a>。</td></tr>
+    <tr><td><code>poll_after</code></td><td class="ty">integer</td><td>只在订单未结束时出现，建议多少秒后再查询（开通中 8 秒，人工核对 60 秒）。同一张订单 6 秒内重复查询，得到的是同样的结果。</td></tr>
+  </table></div>
+  <p class="label">示例</p>
+<pre><code>curl {BASE}/orders/OD3F9A1C07B2D4E5 -H "Authorization: Bearer $KEY" -H "User-Agent: my-shop/1.0"</code></pre>
+  <p>已开通：</p>
+<pre><code>{
+  "ok": true,
+  "data": {
+    "order_no": "OD3F9A1C07B2D4E5",
+    "status": "succeeded",
+    "cdk_state": "used",
+    "plan": "pro-5x",
+    "plan_name": "Pro 5x",
+    "buyer_email": "bu***@example.com",
+    "message": "已开通。卡密已消耗。",
+    "created_at": "2026-10-05T09:02:11Z",
+    "updated_at": "2026-10-05T09:03:42Z",
+    "finished_at": "2026-10-05T09:03:42Z"
+  },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+  <p>失败：</p>
+<pre><code>{
+  "ok": true,
+  "data": {
+    "order_no": "OD3F9A1C07B2D4E5",
+    "status": "failed",
+    "cdk_state": "available",
+    "plan": "pro-5x",
+    "plan_name": "Pro 5x",
+    "buyer_email": "bu***@example.com",
+    "message": "这次付款被风控拦截了，请过两分钟之后再尝试。卡密未消耗。",
+    "created_at": "2026-10-05T09:02:11Z",
+    "updated_at": "2026-10-05T09:03:42Z",
+    "finished_at": "2026-10-05T09:03:42Z",
+    "failure": { "code": "payment_blocked", "action": "retry_later" }
+  },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+  <p class="label">可能的错误</p>
+  <p><code>no_such_order</code>：订单号不存在，或者不是你这把密钥提交的订单。</p>
+
+  <h3 id="lookup">POST /orders/lookup</h3>
+  <div class="endpoint"><span class="m post">POST</span><code>/orders/lookup</code><span class="chips"><span class="chip">找回订单</span></span></div>
+  <p>按卡密找回订单，用于订单号丢失、页面刷新或提交时没有收到响应的情况。返回你这把密钥对这张卡密提交的最近一张订单，格式与 <code>GET /orders/{order_no}</code> 相同；没有时返回 404 <code>no_such_order</code>。其他代理提交的订单、买家在我们网站上兑换的订单都查不到。</p>
+  <p class="label">请求字段</p>
+  <div class="tw"><table>
+    <tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr>
+    <tr><td><code>cdk</code></td><td class="ty">string</td><td class="c">是</td><td>卡密。放在请求体中而不是网址中，避免出现在访问日志里。</td></tr>
+  </table></div>
+  <p class="label">示例</p>
+<pre><code>curl -X POST {BASE}/orders/lookup -H "Authorization: Bearer $KEY" -H "User-Agent: my-shop/1.0" \
+  -H "Content-Type: application/json" \
+  -d '{"cdk":"XXXXXXXXXXXX-XXXXXXXXXXXX-XXXXXXXXXXXX"}'</code></pre>
+</section>
+
+<section id="status">
+  <h2>6. 订单状态与失败处理</h2>
+  <h3>订单状态</h3>
+  <div class="tw"><table>
+    <tr><th><code>status</code></th><th>含义</th><th>处理</th></tr>
+    <tr><td><code>processing</code></td><td>开通中，通常 1–3 分钟</td><td>按 <code>poll_after</code> 继续查询，不要重复提交。卡密已锁定。</td></tr>
+    <tr><td><code>succeeded</code></td><td>已开通（终态）</td><td>提示买家到 ChatGPT 中确认。卡密已消耗。</td></tr>
+    <tr><td><code>failed</code></td><td>失败（终态）</td><td>查看 <code>failure</code> 和 <code>cdk_state</code>：<code>cdk_state</code> 为 <code>available</code> 时可以重新开始，其他情况不要重新提交，联系我们。</td></tr>
+    <tr><td><code>under_review</code></td><td>人工核对中，通常 2 小时内有结果</td><td>不要重复提交，按 <code>poll_after</code>（60 秒）继续查询，之后会变为 <code>succeeded</code> 或 <code>failed</code>。需要加急时联系我们并提供订单号。卡密已锁定。</td></tr>
+  </table></div>
+  <figure>
+    <div class="dw states">
+    <svg viewBox="0 0 660 230" role="img" aria-labelledby="st-title">
+      <title id="st-title">订单状态的变化：processing 结束为 succeeded 或 failed，也可能先进入 under_review</title>
+      <defs><marker id="st-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="sq-arrow" d="M0 0 L10 5 L0 10 z"/></marker></defs>
+      <rect class="st-box st-run" x="20" y="90" width="150" height="52" rx="8"/>
+      <text class="st-code" x="95" y="112" text-anchor="middle">processing</text><text class="st-sub" x="95" y="130" text-anchor="middle">开通中</text>
+      <rect class="st-box st-rev" x="255" y="90" width="150" height="52" rx="8"/>
+      <text class="st-code" x="330" y="112" text-anchor="middle">under_review</text><text class="st-sub" x="330" y="130" text-anchor="middle">人工核对中</text>
+      <rect class="st-box st-ok" x="490" y="20" width="150" height="52" rx="8"/>
+      <text class="st-code" x="565" y="42" text-anchor="middle">succeeded</text><text class="st-sub" x="565" y="60" text-anchor="middle">已开通（终态）</text>
+      <rect class="st-box st-err" x="490" y="160" width="150" height="52" rx="8"/>
+      <text class="st-code" x="565" y="182" text-anchor="middle">failed</text><text class="st-sub" x="565" y="200" text-anchor="middle">失败（终态）</text>
+      <line class="st-line" x1="170" y1="116" x2="249" y2="116" marker-end="url(#st-arr)"/>
+      <path class="st-line" d="M170 100 C 300 30, 380 40, 484 46" marker-end="url(#st-arr)"/>
+      <path class="st-line" d="M170 132 C 300 202, 380 192, 484 186" marker-end="url(#st-arr)"/>
+      <line class="st-line" x1="405" y1="104" x2="484" y2="62" marker-end="url(#st-arr)"/>
+      <line class="st-line" x1="405" y1="128" x2="484" y2="170" marker-end="url(#st-arr)"/>
+    </svg>
+    </div>
+    <figcaption>订单从 <code>processing</code> 开始，结束为 <code>succeeded</code> 或 <code>failed</code>；少数订单会先进入 <code>under_review</code>。<span class="narrow-only">图可以左右滑动查看。</span></figcaption>
+  </figure>
+  <h3 id="cdk-state">卡密状态</h3>
+  <div class="tw"><table>
+    <tr><th><code>cdk_state</code></th><th>含义</th></tr>
+    <tr><td><code>available</code></td><td>未消耗：卡密仍可使用，可以重新核对、重新提交。</td></tr>
+    <tr><td><code>held</code></td><td>已锁定：正在处理或等待人工核对，不能重复提交。</td></tr>
+    <tr><td><code>used</code></td><td>已使用：已兑换成功。</td></tr>
+  </table></div>
+  <p class="muted">失败订单的 <code>cdk_state</code> 以最近一次查询为准，失败后卡密恢复为 <code>available</code> 可能需要几秒。</p>
+  <h3 id="failure">失败原因</h3>
+  <p>订单为 <code>failed</code> 时，<code>failure.code</code> 是失败原因，<code>failure.action</code> 是建议界面如何引导买家：</p>
+  <div class="tw"><table>
+    <tr><th><code>failure.code</code></th><th><code>failure.action</code></th><th>含义</th></tr>
+    <tr><td><code>session_invalid</code></td><td><code>recopy_session</code></td><td>账号登录已失效：请买家重新复制 Session，再重新核对。</td></tr>
+    <tr><td><code>account_has_plan</code></td><td><code>change_account</code></td><td>账号已有生效中的套餐：请买家换一个账号。</td></tr>
+    <tr><td><code>account_restricted</code></td><td><code>change_account</code></td><td>账号暂时无法充值：过两分钟再试，或者换一个账号。</td></tr>
+    <tr><td><code>payment_blocked</code></td><td><code>retry_later</code></td><td>付款被风控拦截：过两分钟再试。</td></tr>
+    <tr><td><code>payment_failed</code></td><td><code>retry_later</code></td><td>付款没有成功：过两分钟再试。</td></tr>
+    <tr><td><code>try_later</code></td><td><code>retry_later</code></td><td>通道暂时繁忙：过两分钟再试。</td></tr>
+    <tr><td><code>cancelled</code></td><td><code>retry_later</code></td><td>这次充值已取消。</td></tr>
+    <tr><td><code>not_accepted</code></td><td><code>retry_later</code></td><td>这次提交没有被受理。</td></tr>
+    <tr><td><code>recharge_failed</code></td><td><code>retry_later</code></td><td>其他原因未完成。</td></tr>
+  </table></div>
+  <h3 id="resubmit">失败后重新提交</h3>
+  <p>订单为 <code>failed</code> 且 <code>cdk_state</code> 为 <code>available</code> 时，卡密仍可使用。按 <code>failure.action</code> 引导买家（等待两分钟、换一个账号或重新复制 Session），再从 <a href="#verify"><code>POST /redeem/verify</code></a> 重新开始，并使用新的幂等号。部分失败之后（例如付款被风控拦截），同一个账号需要等待约 2 分钟才能再次提交，否则会返回 <code>wait_before_retry</code>，响应带 <code>retry_after</code>。</p>
+  <p><code>cdk_state</code> 不是 <code>available</code> 时，不要重新提交，联系我们处理。</p>
+  <div class="callout warn">
+    <p class="callout-t">警告</p>
+    <p><code>failure.action</code> 为 <code>retry_later</code> 时，表示请买家过两分钟后自己再试一次，不是让你的系统过两分钟后自动提交。每次提交都会实际发起一次付款，同一个账号连续失败时，自动重交只会继续失败。重新提交必须由买家本人发起，并从 <a href="#verify"><code>POST /redeem/verify</code></a> 开始。</p>
+  </div>
+</section>
+
+<section id="errors">
+  <h2>7. 错误码</h2>
+  <p><code>retryable</code> 列对应响应中的 <code>error.retryable</code>。</p>
+  <div class="tw"><table>
+    <tr><th><code>error.code</code></th><th>HTTP</th><th>retryable</th><th>含义</th><th>处理</th></tr>
+    <tr><td><code>invalid_key</code></td><td>401</td><td>否</td><td>密钥无效或已停用</td><td>检查密钥；已停用的联系我们。</td></tr>
+    <tr><td><code>ip_not_allowed</code></td><td>403</td><td>否</td><td>来源 IP 不在这把密钥登记的名单中</td><td>用 <code>GET /ping</code> 查看来源 IP，联系我们登记。</td></tr>
+    <tr><td><code>service_disabled</code></td><td>503</td><td>是</td><td>接口暂时关闭</td><td>稍后重试。</td></tr>
+    <tr><td><code>rate_limited</code></td><td>429</td><td>是</td><td>请求过于频繁</td><td>按 <code>Retry-After</code> 等待。</td></tr>
+    <tr><td><code>too_many_failures</code></td><td>429</td><td>是</td><td>这个 IP 的错误请求过多，已被临时封锁</td><td>等待 <code>Retry-After</code>，检查密钥和来源 IP。</td></tr>
+    <tr><td><code>busy</code></td><td>429</td><td>是</td><td>系统繁忙</td><td>按 <code>Retry-After</code> 稍后重试。</td></tr>
+    <tr><td><code>too_many_inflight</code></td><td>429</td><td>是</td><td>同时处理中的订单已达上限</td><td>等已有订单出结果后再提交。</td></tr>
+    <tr><td><code>bad_request</code></td><td>400</td><td>否</td><td>请求格式错误</td><td>检查请求体。</td></tr>
+    <tr><td><code>not_found</code></td><td>404</td><td>否</td><td>接口不存在</td><td>检查路径和请求方法。</td></tr>
+    <tr><td><code>cdk_invalid</code></td><td>422</td><td>否</td><td>卡密无效</td><td>请买家核对卡密。</td></tr>
+    <tr><td><code>cdk_used</code></td><td>409</td><td>否</td><td>卡密已兑换或已使用</td><td>查看 <code>error.details.order_no</code>。</td></tr>
+    <tr><td><code>cdk_not_usable</code></td><td>409</td><td>否</td><td>卡密暂时不能使用：已停用、已冻结或正在处理</td><td>查看 <code>error.details.order_no</code>；没有时联系我们。</td></tr>
+    <tr><td><code>session_format</code></td><td>400</td><td>否</td><td>Session 不是整页内容</td><td>请买家重新复制整页 Session。</td></tr>
+    <tr><td><code>session_invalid</code></td><td>422</td><td>否</td><td>账号登录已失效</td><td>请买家重新复制 Session。</td></tr>
+    <tr><td><code>account_not_eligible</code></td><td>409</td><td>否</td><td>账号当前不能充值这个套餐</td><td>请买家换一个账号。</td></tr>
+    <tr><td><code>account_has_plan</code></td><td>409</td><td>否</td><td>账号已有生效中的套餐</td><td>请买家换一个账号。</td></tr>
+    <tr><td><code>wait_before_retry</code></td><td>409</td><td>是</td><td>这个账号需要等待后再试</td><td>等待 <code>retry_after</code> 秒后重新核对。</td></tr>
+    <tr><td><code>no_such_ticket</code></td><td>404</td><td>否</td><td>核对票据不存在</td><td>重新核对账号。</td></tr>
+    <tr><td><code>ticket_expired</code></td><td>409</td><td>否</td><td>核对已过期或已作废</td><td>重新核对账号。</td></tr>
+    <tr><td><code>ticket_used</code></td><td>409</td><td>否</td><td>这张票据已经提交过</td><td>查看 <code>error.details.order_no</code>。</td></tr>
+    <tr><td><code>idempotency_key_reused</code></td><td>409</td><td>否</td><td>幂等号已用于另一张票据</td><td>换一个新的幂等号。</td></tr>
+    <tr><td><code>no_such_order</code></td><td>404</td><td>否</td><td>订单不存在</td><td>检查订单号；只能查询本密钥提交的订单。</td></tr>
+    <tr><td><code>request_rejected</code></td><td>422</td><td>否</td><td>请求未通过</td><td>请买家核对卡密和账号后重试。</td></tr>
+    <tr><td><code>try_later</code></td><td>503</td><td>是</td><td>请过两分钟之后再尝试</td><td>稍后重试。</td></tr>
+    <tr><td><code>service_unavailable</code></td><td>503</td><td>是</td><td>服务暂时不可用</td><td>稍后重试。</td></tr>
+    <tr><td><code>internal_error</code></td><td>500</td><td>是</td><td>服务内部错误</td><td>稍后重试；持续出现时提供 <code>trace_id</code> 联系我们。</td></tr>
+  </table></div>
+  <p>来源 IP 不在登记名单中时，响应会给出接口识别到的来源 IP，按这个地址登记即可：</p>
+<pre><code>{
+  "ok": false,
+  "error": {
+    "code": "ip_not_allowed",
+    "message": "当前请求来源的 IP 不在这把密钥允许的名单里",
+    "retryable": false,
+    "details": { "ip": "203.0.113.99" }
+  },
+  "trace_id": "9F2A41C07B"
+}</code></pre>
+</section>
+
+<section id="example">
+  <h2>8. 示例代码</h2>
+  <p>四份示例完成同一件事：查询卡密、核对账号、提交兑换（按 <a href="#retry">重试规则</a> 处理超时和未执行的提交）、按 <code>poll_after</code> 查询到出结果。只使用语言自带的库（PHP 使用 curl 扩展），设置 <code>AGENT_API_KEY</code> 环境变量后即可运行。</p>
+  <div class="callout">
+    <p class="callout-t">提示</p>
+    <ul>
+      <li>接入自己的系统时，<code>idempotency_key</code> 要在调用 <code>POST /redeem</code> 之前和你自己的订单一起写入数据库，进程重启后的重试也使用它。</li>
+      <li>示例用 sleep 轮询是为了便于阅读。实际系统中一般由后台任务按 <code>poll_after</code> 定时查询，买家页面只显示当前的 <code>message</code>。</li>
+      <li>买家的 Session 只在本次请求中使用，不要保存，不要写进日志。</li>
+    </ul>
+  </div>
+  <div class="tabs" data-tabs>
+    <div class="tab-list" role="tablist" aria-label="示例语言">
+      <button type="button" role="tab" id="tab-py" aria-controls="ex-py" aria-selected="true">Python</button>
+      <button type="button" role="tab" id="tab-js" aria-controls="ex-js" aria-selected="false" tabindex="-1">Node.js</button>
+      <button type="button" role="tab" id="tab-go" aria-controls="ex-go" aria-selected="false" tabindex="-1">Go</button>
+      <button type="button" role="tab" id="tab-php" aria-controls="ex-php" aria-selected="false" tabindex="-1">PHP</button>
+    </div>
+    <div class="tab-panel on" id="ex-py" role="tabpanel" aria-labelledby="tab-py">
+      <p class="panel-t">Python 3.8+，只使用标准库</p>
+<pre><code class="language-python" data-file="redeem.py">"""兑换接口 v1 示例（Python 3.8+，只用标准库）。
+
+用法：
+    export AGENT_API_KEY=cpa_...          # 密钥只放在服务器的环境变量里
+    python redeem.py &lt;卡密&gt; &lt;买家 Session 文件&gt;
+
+把这份代码接进你的系统时：idempotency_key 要在调用 /redeem 之前和你自己的订单一起存进数据库，
+重试时原样复用；买家的 Session 只在这一次请求里用，不要保存、不要写日志。
+"""
+
+import http.client
+import json
+import os
+import secrets
+import sys
+import time
+import urllib.error
+import urllib.request
+
+BASE = os.environ.get("AGENT_API_BASE", "https://recharge.chongplus.store/api/open/v1")
+KEY = os.environ["AGENT_API_KEY"]
+# 换成你自己系统的名字。必须设置：urllib 的默认值（Python-urllib/3.x）会被网关拒绝（HTTP 403，回包是 error code: 1010）。
+USER_AGENT = "my-shop/1.0"
+
+# 这几种错误说明「这次没处理」：等 retry_after 秒后，用同一张 ticket、同一个 idempotency_key 原样再发。
+RESEND_SAME = {"busy", "rate_limited", "too_many_inflight", "service_unavailable",
+               "service_disabled", "try_later", "internal_error"}
+UNFINISHED = {"processing", "under_review"}
+
+
+class ApiError(Exception):
+    """接口明确返回了错误（ok=false）。"""
+
+    def __init__(self, status, error, trace_id):
+        super().__init__(f"{error.get('code')}: {error.get('message')} (trace_id={trace_id})")
+        self.status = status
+        self.code = error.get("code", "")
+        self.message = error.get("message", "")
+        self.retry_after = error.get("retry_after") or 0
+        self.details = error.get("details") or {}
+
+
+class NetworkError(Exception):
+    """没拿到响应（超时、断网、网关错误页）：结果未知，只能原样重发或按卡密找回。"""
+
+
+def call(method, path, body=None):
+    data = None if body is None else json.dumps(body, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(BASE + path, data=data, method=method)
+    req.add_header("Authorization", "Bearer " + KEY)
+    req.add_header("User-Agent", USER_AGENT)
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=90) as resp:  # 核对账号一步要 10 秒左右
+            status, raw = resp.status, resp.read()
+    except urllib.error.HTTPError as e:  # 4xx / 5xx 也带着 JSON
+        status, raw = e.code, e.read()
+    except (OSError, http.client.HTTPException) as e:  # 超时、断网、连接被断开
+        raise NetworkError(str(e)) from e
+    try:
+        payload = json.loads(raw)
+    except ValueError as e:
+        raise NetworkError(f"HTTP {status}，回包不是 JSON") from e
+    if payload.get("ok"):
+        return payload["data"]
+    raise ApiError(status, payload.get("error") or {}, payload.get("trace_id"))
+
+
+def submit(ticket, idem, cdk):
+    """确认兑换。网络出错、或者是「这次没处理」的错误，都用同一张 ticket、同一个幂等号原样再发。"""
+    for _ in range(6):
+        try:
+            return call("POST", "/redeem", {"ticket": ticket, "idempotency_key": idem})
+        except NetworkError:
+            time.sleep(3)
+        except ApiError as e:
+            if e.code == "ticket_used" and e.details.get("order_no"):
+                return call("GET", "/orders/" + e.details["order_no"])  # 这张 ticket 已经提交过：查那张单
+            if e.code not in RESEND_SAME:
+                raise  # 其他错误：这张 ticket 作废，处理完问题后从核对账号重新来，并换新的幂等号
+            time.sleep(e.retry_after or 3)
+    # 一直没拿到明确结果：按卡密找回（可能已经受理了），不要换新的幂等号重新提交。
+    return call("POST", "/orders/lookup", {"cdk": cdk})
+
+
+def wait_until_done(order, deadline_seconds=2 * 3600):
+    deadline = time.monotonic() + deadline_seconds
+    while order["status"] in UNFINISHED:
+        if time.monotonic() &gt; deadline:
+            break  # 等太久了：提示买家联系客服并给出 order_no，不要重新提交
+        time.sleep(order.get("poll_after") or 8)
+        try:
+            order = call("GET", "/orders/" + order["order_no"])
+        except NetworkError:
+            time.sleep(10)
+        except ApiError as e:
+            if e.code not in RESEND_SAME:
+                raise
+            time.sleep(e.retry_after or 10)
+    return order
+
+
+def redeem(cdk, session):
+    info = call("POST", "/cdk/query", {"cdk": cdk})  # 可选：先告诉买家是什么套餐
+    print("套餐：", info["plan_name"], file=sys.stderr)
+
+    check = call("POST", "/redeem/verify", {"cdk": cdk, "session": session})
+    if not check["eligible"]:
+        return {"ok": False, "message": check["message"]}  # 账号已有套餐：请买家换一个账号
+
+    idem = "ord-" + secrets.token_hex(12)  # 实际使用时：和你的订单一起先存库，重试时原样复用
+    order = wait_until_done(submit(check["ticket"], idem, cdk))
+    return {
+        "ok": order["status"] == "succeeded",
+        "status": order["status"],
+        "message": order["message"],
+        "order_no": order["order_no"],
+        "cdk_state": order["cdk_state"],
+        "failure": order.get("failure"),
+    }
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        sys.exit("用法：python redeem.py &lt;卡密&gt; &lt;买家 Session 文件&gt;")
+    with open(sys.argv[2], encoding="utf-8") as f:
+        buyer_session = f.read()
+    try:
+        result = redeem(sys.argv[1], buyer_session)
+    except ApiError as e:
+        result = {"ok": False, "code": e.code, "message": e.message, "details": e.details}
+    print(json.dumps(result, ensure_ascii=False, indent=2))</code></pre>
+    </div>
+    <div class="tab-panel" id="ex-js" role="tabpanel" aria-labelledby="tab-js">
+      <p class="panel-t">Node.js 18+，不需要安装依赖</p>
+<pre><code class="language-javascript" data-file="redeem.mjs">// 兑换接口 v1 示例（Node.js 18+，不用装任何依赖）。
+//
+// 用法：
+//   export AGENT_API_KEY=cpa_...          # 密钥只放在服务器的环境变量里
+//   node redeem.mjs &lt;卡密&gt; &lt;买家 Session 文件&gt;
+//
+// 把这份代码接进你的系统时：idempotency_key 要在调用 /redeem 之前和你自己的订单一起存进数据库，
+// 重试时原样复用；买家的 Session 只在这一次请求里用，不要保存、不要写日志。
+
+import { randomBytes } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { setTimeout as sleep } from 'node:timers/promises'
+
+const BASE = process.env.AGENT_API_BASE || 'https://recharge.chongplus.store/api/open/v1'
+const KEY = process.env.AGENT_API_KEY
+// 换成你自己系统的名字。别用语言自带的默认值：有的会被网关直接拒绝（HTTP 403，回包是 error code: 1010）。
+const USER_AGENT = 'my-shop/1.0'
+
+// 这几种错误说明「这次没处理」：等 retry_after 秒后，用同一张 ticket、同一个 idempotency_key 原样再发。
+const RESEND_SAME = new Set([
+  'busy',
+  'rate_limited',
+  'too_many_inflight',
+  'service_unavailable',
+  'service_disabled',
+  'try_later',
+  'internal_error',
+])
+const UNFINISHED = new Set(['processing', 'under_review'])
+
+/** 接口明确返回了错误（ok=false）。 */
+class ApiError extends Error {
+  constructor(status, error, traceId) {
+    super(`${error.code}: ${error.message} (trace_id=${traceId})`)
+    this.status = status
+    this.code = error.code || ''
+    this.userMessage = error.message || '' // 给买家看的那句话
+    this.retryAfter = error.retry_after || 0
+    this.details = error.details || {}
+  }
+}
+
+/** 没拿到响应（超时、断网、网关错误页）：结果未知，只能原样重发或按卡密找回。 */
+class NetworkError extends Error {}
+
+async function call(method, path, body) {
+  let res
+  try {
+    res = await fetch(BASE + path, {
+      method,
+      headers: {
+        Authorization: `Bearer ${KEY}`,
+        'User-Agent': USER_AGENT,
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(90_000), // 核对账号一步要 10 秒左右
+    })
+  } catch (e) {
+    throw new NetworkError(String(e))
+  }
+  let payload
+  try {
+    payload = await res.json()
+  } catch {
+    throw new NetworkError(`HTTP ${res.status}，回包不是 JSON`)
+  }
+  if (payload.ok) return payload.data
+  throw new ApiError(res.status, payload.error || {}, payload.trace_id)
+}
+
+/** 确认兑换。网络出错、或者是「这次没处理」的错误，都用同一张 ticket、同一个幂等号原样再发。 */
+async function submit(ticket, idem, cdk) {
+  for (let i = 0; i &lt; 6; i++) {
+    try {
+      return await call('POST', '/redeem', { ticket, idempotency_key: idem })
+    } catch (e) {
+      if (e instanceof NetworkError) {
+        await sleep(3000)
+        continue
+      }
+      if (e.code === 'ticket_used' &amp;&amp; e.details.order_no) {
+        return call('GET', `/orders/${e.details.order_no}`) // 这张 ticket 已经提交过：查那张单
+      }
+      if (!RESEND_SAME.has(e.code)) throw e // 其他错误：这张 ticket 作废，处理完问题后从核对账号重新来，并换新的幂等号
+      await sleep((e.retryAfter || 3) * 1000)
+    }
+  }
+  // 一直没拿到明确结果：按卡密找回（可能已经受理了），不要换新的幂等号重新提交。
+  return call('POST', '/orders/lookup', { cdk })
+}
+
+async function waitUntilDone(order, deadlineMs = 2 * 3600_000) {
+  const deadline = Date.now() + deadlineMs
+  while (UNFINISHED.has(order.status)) {
+    if (Date.now() &gt; deadline) break // 等太久了：提示买家联系客服并给出 order_no，不要重新提交
+    await sleep((order.poll_after || 8) * 1000)
+    try {
+      order = await call('GET', `/orders/${order.order_no}`)
+    } catch (e) {
+      if (!(e instanceof NetworkError) &amp;&amp; !RESEND_SAME.has(e.code)) throw e
+      await sleep((e.retryAfter || 10) * 1000)
+    }
+  }
+  return order
+}
+
+export async function redeem(cdk, session) {
+  const info = await call('POST', '/cdk/query', { cdk }) // 可选：先告诉买家是什么套餐
+  console.error('套餐：', info.plan_name)
+
+  const check = await call('POST', '/redeem/verify', { cdk, session })
+  if (!check.eligible) return { ok: false, message: check.message } // 账号已有套餐：请买家换一个账号
+
+  const idem = `ord-${randomBytes(12).toString('hex')}` // 实际使用时：和你的订单一起先存库，重试时原样复用
+  const order = await waitUntilDone(await submit(check.ticket, idem, cdk))
+  return {
+    ok: order.status === 'succeeded',
+    status: order.status,
+    message: order.message,
+    order_no: order.order_no,
+    cdk_state: order.cdk_state,
+    failure: order.failure,
+  }
+}
+
+if (process.argv.length === 4) {
+  const [cdk, sessionFile] = process.argv.slice(2)
+  try {
+    console.log(JSON.stringify(await redeem(cdk, readFileSync(sessionFile, 'utf8')), null, 2))
+  } catch (e) {
+    if (!(e instanceof ApiError)) throw e
+    console.log(JSON.stringify({ ok: false, code: e.code, message: e.userMessage, details: e.details }, null, 2))
+  }
+} else {
+  console.error('用法：node redeem.mjs &lt;卡密&gt; &lt;买家 Session 文件&gt;')
+  process.exitCode = 1
+}</code></pre>
+    </div>
+    <div class="tab-panel" id="ex-go" role="tabpanel" aria-labelledby="tab-go">
+      <p class="panel-t">Go 1.21+，只使用标准库</p>
+<pre><code class="language-go" data-file="redeem.go">// 兑换接口 v1 示例（Go 1.21+，只用标准库）。
+//
+// 用法：
+//
+//	export AGENT_API_KEY=cpa_...          # 密钥只放在服务器的环境变量里
+//	go run redeem.go &lt;卡密&gt; &lt;买家 Session 文件&gt;
+//
+// 把这份代码接进你的系统时：idempotency_key 要在调用 /redeem 之前和你自己的订单一起存进数据库，
+// 重试时原样复用；买家的 Session 只在这一次请求里用，不要保存、不要写日志。
+package main
+
+import (
+	"bytes"
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"os"
+	"time"
+)
+
+var (
+	base   = envOr("AGENT_API_BASE", "https://recharge.chongplus.store/api/open/v1")
+	key    = os.Getenv("AGENT_API_KEY")
+	client = &amp;http.Client{Timeout: 90 * time.Second} // 核对账号一步要 10 秒左右
+)
+
+// 换成你自己系统的名字。别用语言自带的默认值：有的会被网关直接拒绝（HTTP 403，回包是 error code: 1010）。
+const userAgent = "my-shop/1.0"
+
+// 这几种错误说明「这次没处理」：等 retry_after 秒后，用同一张 ticket、同一个 idempotency_key 原样再发。
+var resendSame = map[string]bool{
+	"busy": true, "rate_limited": true, "too_many_inflight": true, "service_unavailable": true,
+	"service_disabled": true, "try_later": true, "internal_error": true,
+}
+
+// APIError 接口明确返回了错误（ok=false）。
+type APIError struct {
+	Status     int               `json:"-"`
+	Code       string            `json:"code"`
+	Message    string            `json:"message"`
+	RetryAfter int               `json:"retry_after"`
+	Details    map[string]string `json:"details"`
+	TraceID    string            `json:"-"`
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("%s: %s (trace_id=%s)", e.Code, e.Message, e.TraceID)
+}
+
+// ErrNetwork 没拿到响应（超时、断网、网关错误页）：结果未知，只能原样重发或按卡密找回。
+var ErrNetwork = errors.New("network error")
+
+// Order 一张订单（只列了这里用到的字段）。
+type Order struct {
+	OrderNo   string `json:"order_no"`
+	Status    string `json:"status"`
+	CDKState  string `json:"cdk_state"`
+	Message   string `json:"message"`
+	PollAfter int    `json:"poll_after"`
+	Failure   *struct {
+		Code   string `json:"code"`
+		Action string `json:"action"`
+	} `json:"failure,omitempty"`
+}
+
+func call(method, path string, body, out any) error {
+	var reader *bytes.Reader
+	if body != nil {
+		raw, err := json.Marshal(body)
+		if err != nil {
+			return err
+		}
+		reader = bytes.NewReader(raw)
+	} else {
+		reader = bytes.NewReader(nil)
+	}
+	req, err := http.NewRequest(method, base+path, reader)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+key)
+	req.Header.Set("User-Agent", userAgent)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrNetwork, err)
+	}
+	defer resp.Body.Close()
+	var payload struct {
+		OK      bool            `json:"ok"`
+		Data    json.RawMessage `json:"data"`
+		Error   *APIError       `json:"error"`
+		TraceID string          `json:"trace_id"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&amp;payload); err != nil {
+		return fmt.Errorf("%w: HTTP %d，回包不是 JSON", ErrNetwork, resp.StatusCode)
+	}
+	if !payload.OK {
+		e := payload.Error
+		if e == nil {
+			e = &amp;APIError{Code: "internal_error"}
+		}
+		e.Status, e.TraceID = resp.StatusCode, payload.TraceID
+		return e
+	}
+	if out == nil {
+		return nil
+	}
+	return json.Unmarshal(payload.Data, out)
+}
+
+// submit 确认兑换。网络出错、或者是「这次没处理」的错误，都用同一张 ticket、同一个幂等号原样再发。
+func submit(ticket, idem, cdk string) (*Order, error) {
+	for i := 0; i &lt; 6; i++ {
+		var order Order
+		err := call(http.MethodPost, "/redeem", map[string]string{"ticket": ticket, "idempotency_key": idem}, &amp;order)
+		if err == nil {
+			return &amp;order, nil
+		}
+		var apiErr *APIError
+		switch {
+		case errors.Is(err, ErrNetwork):
+			time.Sleep(3 * time.Second)
+		case errors.As(err, &amp;apiErr) &amp;&amp; apiErr.Code == "ticket_used" &amp;&amp; apiErr.Details["order_no"] != "":
+			// 这张 ticket 已经提交过：查那张单
+			err = call(http.MethodGet, "/orders/"+apiErr.Details["order_no"], nil, &amp;order)
+			return &amp;order, err
+		case errors.As(err, &amp;apiErr) &amp;&amp; resendSame[apiErr.Code]:
+			time.Sleep(time.Duration(max(apiErr.RetryAfter, 3)) * time.Second)
+		default:
+			return nil, err // 其他错误：这张 ticket 作废，处理完问题后从核对账号重新来，并换新的幂等号
+		}
+	}
+	// 一直没拿到明确结果：按卡密找回（可能已经受理了），不要换新的幂等号重新提交。
+	var order Order
+	err := call(http.MethodPost, "/orders/lookup", map[string]string{"cdk": cdk}, &amp;order)
+	return &amp;order, err
+}
+
+func waitUntilDone(order *Order, deadline time.Duration) (*Order, error) {
+	stop := time.Now().Add(deadline)
+	for order.Status == "processing" || order.Status == "under_review" {
+		if time.Now().After(stop) {
+			break // 等太久了：提示买家联系客服并给出 order_no，不要重新提交
+		}
+		time.Sleep(time.Duration(max(order.PollAfter, 1)) * time.Second)
+		var next Order
+		err := call(http.MethodGet, "/orders/"+order.OrderNo, nil, &amp;next)
+		var apiErr *APIError
+		switch {
+		case err == nil:
+			order = &amp;next
+		case errors.Is(err, ErrNetwork):
+			time.Sleep(10 * time.Second)
+		case errors.As(err, &amp;apiErr) &amp;&amp; resendSame[apiErr.Code]:
+			time.Sleep(time.Duration(max(apiErr.RetryAfter, 10)) * time.Second)
+		default:
+			return order, err
+		}
+	}
+	return order, nil
+}
+
+func redeem(cdk, session string) (map[string]any, error) {
+	var info struct {
+		PlanName string `json:"plan_name"`
+	}
+	if err := call(http.MethodPost, "/cdk/query", map[string]string{"cdk": cdk}, &amp;info); err != nil {
+		return nil, err
+	}
+	fmt.Fprintln(os.Stderr, "套餐：", info.PlanName) // 可选：先告诉买家是什么套餐
+
+	var check struct {
+		Eligible bool   `json:"eligible"`
+		Ticket   string `json:"ticket"`
+		Message  string `json:"message"`
+	}
+	if err := call(http.MethodPost, "/redeem/verify", map[string]string{"cdk": cdk, "session": session}, &amp;check); err != nil {
+		return nil, err
+	}
+	if !check.Eligible {
+		return map[string]any{"ok": false, "message": check.Message}, nil // 账号已有套餐：请买家换一个账号
+	}
+
+	buf := make([]byte, 12)
+	if _, err := rand.Read(buf); err != nil {
+		return nil, err
+	}
+	idem := "ord-" + hex.EncodeToString(buf) // 实际使用时：和你的订单一起先存库，重试时原样复用
+	order, err := submit(check.Ticket, idem, cdk)
+	if err != nil {
+		return nil, err
+	}
+	if order, err = waitUntilDone(order, 2*time.Hour); err != nil {
+		return nil, err
+	}
+	return map[string]any{
+		"ok": order.Status == "succeeded", "status": order.Status, "message": order.Message,
+		"order_no": order.OrderNo, "cdk_state": order.CDKState, "failure": order.Failure,
+	}, nil
+}
+
+func envOr(name, fallback string) string {
+	if v := os.Getenv(name); v != "" {
+		return v
+	}
+	return fallback
+}
+
+func main() {
+	if len(os.Args) != 3 {
+		fmt.Fprintln(os.Stderr, "用法：go run redeem.go &lt;卡密&gt; &lt;买家 Session 文件&gt;")
+		os.Exit(1)
+	}
+	session, err := os.ReadFile(os.Args[2])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	result, err := redeem(os.Args[1], string(session))
+	var apiErr *APIError
+	if errors.As(err, &amp;apiErr) {
+		result = map[string]any{"ok": false, "code": apiErr.Code, "message": apiErr.Message, "details": apiErr.Details}
+	} else if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	out, _ := json.MarshalIndent(result, "", "  ")
+	fmt.Println(string(out))
+}</code></pre>
+    </div>
+    <div class="tab-panel" id="ex-php" role="tabpanel" aria-labelledby="tab-php">
+      <p class="panel-t">PHP 7.4+，需要 curl 扩展</p>
+<pre><code class="language-php" data-file="redeem.php">&lt;?php
+// 兑换接口 v1 示例（PHP 7.4+，需要 curl 扩展）。
+//
+// 用法：
+//   export AGENT_API_KEY=cpa_...          # 密钥只放在服务器的环境变量里
+//   php redeem.php &lt;卡密&gt; &lt;买家 Session 文件&gt;
+//
+// 把这份代码接进你的系统时：idempotency_key 要在调用 /redeem 之前和你自己的订单一起存进数据库，
+// 重试时原样复用；买家的 Session 只在这一次请求里用，不要保存、不要写日志。
+
+define('API_BASE', getenv('AGENT_API_BASE') ?: 'https://recharge.chongplus.store/api/open/v1');
+define('API_KEY', (string) getenv('AGENT_API_KEY'));
+// 换成你自己系统的名字。别用框架或库自带的默认值：有的会被网关直接拒绝（HTTP 403，回包是 error code: 1010）。
+const USER_AGENT = 'my-shop/1.0';
+
+// 这几种错误说明「这次没处理」：等 retry_after 秒后，用同一张 ticket、同一个 idempotency_key 原样再发。
+const RESEND_SAME = ['busy', 'rate_limited', 'too_many_inflight', 'service_unavailable', 'service_disabled', 'try_later', 'internal_error'];
+const UNFINISHED = ['processing', 'under_review'];
+
+/** 接口明确返回了错误（ok=false）。 */
+class ApiError extends Exception
+{
+    public $status;
+    public $errorCode;
+    public $userMessage; // 给买家看的那句话
+    public $retryAfter;
+    public $details;
+
+    public function __construct(int $status, array $error, string $traceId)
+    {
+        $this-&gt;status = $status;
+        $this-&gt;errorCode = (string) ($error['code'] ?? '');
+        $this-&gt;userMessage = (string) ($error['message'] ?? '');
+        $this-&gt;retryAfter = (int) ($error['retry_after'] ?? 0);
+        $this-&gt;details = is_array($error['details'] ?? null) ? $error['details'] : [];
+        parent::__construct("{$this-&gt;errorCode}: {$this-&gt;userMessage} (trace_id={$traceId})");
+    }
+}
+
+/** 没拿到响应（超时、断网、网关错误页）：结果未知，只能原样重发或按卡密找回。 */
+class NetworkError extends Exception
+{
+}
+
+function call(string $method, string $path, ?array $body = null): array
+{
+    $headers = ['Authorization: Bearer ' . API_KEY];
+    $options = [
+        CURLOPT_CUSTOMREQUEST =&gt; $method,
+        CURLOPT_RETURNTRANSFER =&gt; true,
+        CURLOPT_USERAGENT =&gt; USER_AGENT,
+        CURLOPT_CONNECTTIMEOUT =&gt; 10,
+        CURLOPT_TIMEOUT =&gt; 90, // 核对账号一步要 10 秒左右
+    ];
+    if ($body !== null) {
+        $options[CURLOPT_POSTFIELDS] = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        $headers[] = 'Content-Type: application/json';
+    }
+    $options[CURLOPT_HTTPHEADER] = $headers;
+    $ch = curl_init(API_BASE . $path);
+    curl_setopt_array($ch, $options);
+    $raw = curl_exec($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    if ($raw === false) {
+        throw new NetworkError(curl_error($ch)); // 超时、断网、连接被断开
+    }
+    $payload = json_decode($raw, true);
+    if (!is_array($payload)) {
+        throw new NetworkError("HTTP {$status}，回包不是 JSON");
+    }
+    if (!empty($payload['ok'])) {
+        return $payload['data'];
+    }
+    throw new ApiError($status, is_array($payload['error'] ?? null) ? $payload['error'] : [], (string) ($payload['trace_id'] ?? ''));
+}
+
+/** 确认兑换。网络出错、或者是「这次没处理」的错误，都用同一张 ticket、同一个幂等号原样再发。 */
+function submit(string $ticket, string $idem, string $cdk): array
+{
+    for ($i = 0; $i &lt; 6; $i++) {
+        try {
+            return call('POST', '/redeem', ['ticket' =&gt; $ticket, 'idempotency_key' =&gt; $idem]);
+        } catch (NetworkError $e) {
+            sleep(3);
+        } catch (ApiError $e) {
+            if ($e-&gt;errorCode === 'ticket_used' &amp;&amp; !empty($e-&gt;details['order_no'])) {
+                return call('GET', '/orders/' . rawurlencode($e-&gt;details['order_no'])); // 这张 ticket 已经提交过：查那张单
+            }
+            if (!in_array($e-&gt;errorCode, RESEND_SAME, true)) {
+                throw $e; // 其他错误：这张 ticket 作废，处理完问题后从核对账号重新来，并换新的幂等号
+            }
+            sleep($e-&gt;retryAfter &gt; 0 ? $e-&gt;retryAfter : 3);
+        }
+    }
+    // 一直没拿到明确结果：按卡密找回（可能已经受理了），不要换新的幂等号重新提交。
+    return call('POST', '/orders/lookup', ['cdk' =&gt; $cdk]);
+}
+
+function waitUntilDone(array $order, int $deadlineSeconds = 7200): array
+{
+    $deadline = time() + $deadlineSeconds;
+    while (in_array($order['status'], UNFINISHED, true)) {
+        if (time() &gt; $deadline) {
+            break; // 等太久了：提示买家联系客服并给出 order_no，不要重新提交
+        }
+        sleep(max(1, (int) ($order['poll_after'] ?? 8)));
+        try {
+            $order = call('GET', '/orders/' . rawurlencode($order['order_no']));
+        } catch (NetworkError $e) {
+            sleep(10);
+        } catch (ApiError $e) {
+            if (!in_array($e-&gt;errorCode, RESEND_SAME, true)) {
+                throw $e;
+            }
+            sleep($e-&gt;retryAfter &gt; 0 ? $e-&gt;retryAfter : 10);
+        }
+    }
+    return $order;
+}
+
+function redeem(string $cdk, string $session): array
+{
+    $info = call('POST', '/cdk/query', ['cdk' =&gt; $cdk]); // 可选：先告诉买家是什么套餐
+    error_log('套餐：' . $info['plan_name']);
+
+    $check = call('POST', '/redeem/verify', ['cdk' =&gt; $cdk, 'session' =&gt; $session]);
+    if (empty($check['eligible'])) {
+        return ['ok' =&gt; false, 'message' =&gt; $check['message']]; // 账号已有套餐：请买家换一个账号
+    }
+
+    $idem = 'ord-' . bin2hex(random_bytes(12)); // 实际使用时：和你的订单一起先存库，重试时原样复用
+    $order = waitUntilDone(submit($check['ticket'], $idem, $cdk));
+    return [
+        'ok' =&gt; $order['status'] === 'succeeded',
+        'status' =&gt; $order['status'],
+        'message' =&gt; $order['message'],
+        'order_no' =&gt; $order['order_no'],
+        'cdk_state' =&gt; $order['cdk_state'],
+        'failure' =&gt; $order['failure'] ?? null,
+    ];
+}
+
+// 直接用命令行运行时才执行下面这段；被你的系统 include 进去时不会执行。
+if (PHP_SAPI === 'cli' &amp;&amp; realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    if ($argc !== 3) {
+        fwrite(STDERR, "用法：php redeem.php &lt;卡密&gt; &lt;买家 Session 文件&gt;\n");
+        exit(1);
+    }
+    $buyerSession = file_get_contents($argv[2]);
+    if ($buyerSession === false) {
+        exit(1);
+    }
+    try {
+        $result = redeem($argv[1], $buyerSession);
+    } catch (ApiError $e) {
+        $result = ['ok' =&gt; false, 'code' =&gt; $e-&gt;errorCode, 'message' =&gt; $e-&gt;userMessage, 'details' =&gt; (object) $e-&gt;details];
+    }
+    echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), PHP_EOL;
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<section id="checklist">
+  <h2>9. 联调与上线检查</h2>
+  <h3>联调步骤</h3>
+  <ol>
+    <li>调用 <a href="#ping"><code>GET /ping</code></a>，确认密钥有效，返回的 <code>ip</code> 就是你服务器的出口 IP。</li>
+    <li>向我们申请一张测试卡密，用 <a href="#query"><code>POST /cdk/query</code></a> 查询一次，确认能看到套餐。</li>
+    <li>准备一个没有生效中套餐的测试账号，完整走一遍核对账号、提交兑换、查询订单，直到看到 <code>succeeded</code>。没有沙箱环境，测试兑换会实际开通并用掉这张测试卡密。</li>
+    <li>验证常见的错误分支：卡密写错（<code>cdk_invalid</code>）、Session 只复制了一部分（<code>session_format</code>）、同一个幂等号连续提交两次（返回同一张订单）、账号已有套餐（<code>eligible</code> 为 <code>false</code>）。</li>
+  </ol>
+  <h3>上线前检查</h3>
+  <ul>
+    <li>密钥只在服务器的环境变量里，没有出现在前端代码、日志和聊天记录中。</li>
+    <li><code>GET /ping</code> 返回的来源 IP 与登记的出口 IP 一致。</li>
+    <li>所有请求的超时不少于 60 秒，核对账号一步不会因为耗时长被当成失败。</li>
+    <li>请求带的是自己系统的 <code>User-Agent</code>，不是语言自带的默认值。</li>
+    <li>一次兑换只生成一个幂等号，所有重试都复用它；超时后不重新核对，也不换幂等号。</li>
+    <li>轮询间隔不短于 <code>poll_after</code>，并设有总的等待上限（例如 2 小时）；超过上限时提示买家联系客服，并给出 <code>order_no</code>。</li>
+    <li>买家的 Session 不入库、不进日志；你的日志里只记录 <code>order_no</code> 和 <code>trace_id</code>。</li>
+    <li>买家界面直接显示 <code>message</code>，失败时按 <code>failure.action</code> 引导买家。</li>
+    <li>订单失败后，只有买家本人点了重试才重新核对、重新提交，程序里没有任何自动重交。</li>
+    <li>收到 429、503 时按 <code>Retry-After</code> 等待后再试，不立即重试。</li>
+    <li>联调步骤中的错误分支都已验证，界面上的提示与本文档一致。</li>
+  </ul>
+</section>
+
+<section id="faq">
+  <h2>10. 常见问题</h2>
+  <dl class="faq">
+    <dt>核对账号为什么需要 10 秒左右？</dt>
+    <dd>这一步要实时校验买家的账号，属于正常耗时。请把超时设长，并在界面上提示买家正在核对账号。</dd>
+    <dt>买家连续点了两次确认兑换会怎样？</dt>
+    <dd>一张票据只能使用一次：同一个幂等号的第二次请求返回同一张订单，换了幂等号的第二次请求返回 <code>ticket_used</code>，不会重复兑换。</dd>
+    <dt>订单一直是 processing 怎么办？</dt>
+    <dd>通常 1–3 分钟出结果。超过 10 分钟时继续按 <code>poll_after</code> 查询；超过 2 小时请联系我们并提供 <code>order_no</code>。不要重新提交。</dd>
+    <dt>买家想用另一个账号兑换同一张卡密？</dt>
+    <dd>只要卡密仍是 <code>available</code>（核对没有通过，或兑换失败后卡密已恢复），就可以用新的账号重新调用 <code>POST /redeem/verify</code>。</dd>
+    <dt>收到 403，但响应不是 JSON？</dt>
+    <dd>响应是一行 <code>error code: 1010</code> 时，请求在网关就被拒绝了，原因是 <code>User-Agent</code>（见 <a href="#conventions">通用约定</a>），与密钥和 IP 无关，换成你自己系统的名称即可。密钥或 IP 的问题，响应都是 JSON（<code>invalid_key</code>、<code>ip_not_allowed</code>）。</dd>
+    <dt>失败后能让程序过两分钟自动重新提交吗？</dt>
+    <dd>不能。每次提交都会实际发起一次付款，同一个账号连续失败时，自动重交只会继续失败。请把 <code>message</code> 显示给买家，由买家决定换一个账号，还是稍后自己再试。</dd>
+    <dt>联系我们时需要提供什么？</dt>
+    <dd><code>order_no</code>（或响应中的 <code>trace_id</code>）、出问题的大致时间、卡密的前 8 位和后 4 位，以及你收到的完整响应（请去掉密钥）。</dd>
+  </dl>
+</section>
+
+<section id="changelog">
+  <h2>11. 更新记录</h2>
+  <div class="tw"><table>
+    <tr><th>日期</th><th>内容</th></tr>
+    <tr><td>2026-10-17</td><td>文档改版：调整章节结构，增加接口一览、订单状态图，字段表补充类型和是否必填，示例代码改为分语言切换；PDF 增加书签。接口本身没有变化。</td></tr>
+    <tr><td>2026-10-08</td><td>新增 PHP 示例；新增使用约定；说明订单失败后不要让程序自动重新提交。接口本身没有变化。</td></tr>
+    <tr><td>2026-10-05</td><td>v1 首版。</td></tr>
+  </table></div>
+</section>
+
+<footer>
+  兑换接口 v1 · 2026-10-17 修订。随附 <code>openapi.json</code> 和示例代码（Python、Node.js、Go、PHP）。接口如有不兼容的变动，我们会提前通知。
+</footer>
+</main>
+</div>
+
+<script>
+(function () {
+  var d = document
+
+  // 代码块：标题栏（语言或文件名 + 复制按钮）、着色
+  var NUM = /\b\d+(?:\.\d+)?\b/.source
+  var DQ = /"(?:\\.|[^"\\\n])*"/.source
+  var SQ = /'(?:\\.|[^'\\\n])*'/.source
+  var BT = /`(?:\\.|[^`\\])*`/.source
+  var TQ = /"""[\s\S]*?"""|'''[\s\S]*?'''/.source
+  var LINE = /\/\/[^\n]*/.source
+  var BLOCK = /\/\*[\s\S]*?\*\//.source
+  var HASH = /#[^\n]*/.source
+  function lang(cmt, str, kw) {
+    var parts = []
+    parts.push(cmt ? '(' + cmt + ')' : '(\\b\\B)')
+    parts.push('(' + str + ')')
+    parts.push('(' + NUM + ')')
+    parts.push('\\b(' + kw.split(' ').join('|') + ')\\b')
+    return { re: new RegExp(parts.join('|'), 'g'), cls: ['c', 's', 'n', 'k'] }
+  }
+  var LANGS = {
+    json: { re: /("(?:\\.|[^"\\])*")(?=\s*:)|("(?:\\.|[^"\\])*")|(-?\b\d+(?:\.\d+)?\b)|\b(true|false|null)\b/g, cls: ['p', 's', 'n', 'k'] },
+    shell: lang('', DQ + '|' + SQ, 'curl'),
+    python: lang(HASH, TQ + '|' + DQ + '|' + SQ, 'False None True and as break class continue def elif else except finally for from global if import in is lambda not or pass raise return try while with yield'),
+    javascript: lang(LINE + '|' + BLOCK, DQ + '|' + SQ + '|' + BT, 'async await break case catch class const continue default else export false finally for function if import in instanceof let new null of return static super switch this throw true try typeof undefined var while'),
+    go: lang(LINE + '|' + BLOCK, DQ + '|' + SQ + '|' + /`[^`]*`/.source, 'break case chan const continue default defer else false for func go if import interface map nil package range return select struct switch true type var'),
+    php: lang(LINE + '|' + HASH + '|' + BLOCK, DQ + '|' + SQ, 'array as break case catch class const continue default echo else elseif false finally fn for foreach function if new null return static switch throw true try use while')
+  }
+  var LABELS = { json: 'JSON', shell: 'Shell', python: 'Python', javascript: 'Node.js', go: 'Go', php: 'PHP' }
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+  function paint(code, name) {
+    var spec = LANGS[name]
+    if (!spec) return
+    var text = code.textContent, out = '', last = 0, m
+    spec.re.lastIndex = 0
+    while ((m = spec.re.exec(text))) {
+      if (!m[0]) { spec.re.lastIndex++; continue }
+      var cls = ''
+      for (var i = 1; i < m.length; i++) if (m[i] !== undefined) { cls = spec.cls[i - 1]; break }
+      out += esc(text.slice(last, m.index)) + (cls ? '<span class="t-' + cls + '">' + esc(m[0]) + '</span>' : esc(m[0]))
+      last = m.index + m[0].length
+    }
+    code.innerHTML = out + esc(text.slice(last))
+  }
+  function copy(text, button) {
+    function done() { button.textContent = '已复制'; setTimeout(function () { button.textContent = '复制' }, 1500) }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, function () {})
+      return
+    }
+    var area = d.createElement('textarea')
+    area.value = text
+    area.setAttribute('readonly', '')
+    area.style.position = 'fixed'
+    area.style.opacity = '0'
+    d.body.appendChild(area)
+    area.select()
+    try { if (d.execCommand('copy')) done() } catch (e) {}
+    d.body.removeChild(area)
+  }
+  Array.prototype.forEach.call(d.querySelectorAll('main pre'), function (pre) {
+    var code = pre.querySelector('code')
+    if (!code) return
+    var text = code.textContent
+    var cls = /language-(\w+)/.exec(code.className)
+    var name = cls ? cls[1] : /^\s*[{[]/.test(text) ? 'json' : /^\s*curl\b/.test(text) ? 'shell' : ''
+    var wrap = d.createElement('div')
+    wrap.className = 'code'
+    var head = d.createElement('div')
+    head.className = 'code-head'
+    var title = d.createElement('span')
+    title.textContent = code.getAttribute('data-file') || LABELS[name] || ''
+    var button = d.createElement('button')
+    button.type = 'button'
+    button.textContent = '复制'
+    button.addEventListener('click', function () { copy(text, button) })
+    head.appendChild(title)
+    head.appendChild(button)
+    pre.parentNode.insertBefore(wrap, pre)
+    wrap.appendChild(head)
+    wrap.appendChild(pre)
+    paint(code, name)
+  })
+
+  // 手机上表格每格前面显示列名
+  Array.prototype.forEach.call(d.querySelectorAll('.tw table'), function (table) {
+    var heads = Array.prototype.map.call(table.querySelectorAll('tr:first-child th'), function (th) { return th.textContent.trim() })
+    Array.prototype.forEach.call(table.querySelectorAll('tr'), function (tr) {
+      Array.prototype.forEach.call(tr.children, function (cell, i) {
+        if (cell.tagName === 'TD' && heads[i]) cell.setAttribute('data-label', heads[i])
+      })
+    })
+  })
+
+  // 窄屏上目录默认收起，点了目录里的链接也收起
+  var box = d.querySelector('.toc-box')
+  var narrow = window.matchMedia('(max-width: 1000px)')
+  if (box) {
+    if (narrow.matches) box.removeAttribute('open')
+    box.addEventListener('click', function (e) {
+      if (narrow.matches && e.target.closest('a')) box.removeAttribute('open')
+    })
+    var wide = function () { if (!narrow.matches) box.setAttribute('open', '') }
+    if (narrow.addEventListener) narrow.addEventListener('change', wide)
+    else if (narrow.addListener) narrow.addListener(wide)
+  }
+
+  // 示例代码切换
+  Array.prototype.forEach.call(d.querySelectorAll('[data-tabs]'), function (box) {
+    var tabs = box.querySelectorAll('[role="tab"]')
+    var panels = box.querySelectorAll('.tab-panel')
+    function show(n, focus) {
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].setAttribute('aria-selected', i === n ? 'true' : 'false')
+        tabs[i].tabIndex = i === n ? 0 : -1
+        panels[i].classList.toggle('on', i === n)
+      }
+      if (focus) tabs[n].focus()
+    }
+    Array.prototype.forEach.call(tabs, function (tab, i) {
+      tab.addEventListener('click', function () { show(i) })
+      tab.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+        e.preventDefault()
+        show((i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length, true)
+      })
+    })
+  })
+
+  // 目录：标出当前读到的位置
+  var links = {}, targets = []
+  Array.prototype.forEach.call(d.querySelectorAll('.toc a[href^="#"]'), function (a) {
+    var el = d.getElementById(a.getAttribute('href').slice(1))
+    if (el) { links[el.id] = a; targets.push(el) }
+  })
+  var current = null, queued = false
+  function mark() {
+    queued = false
+    var line = window.innerHeight * 0.3, pick = targets[0]
+    for (var i = 0; i < targets.length; i++) if (targets[i].getBoundingClientRect().top <= line) pick = targets[i]
+    if (window.innerHeight + window.scrollY >= d.documentElement.scrollHeight - 4) pick = targets[targets.length - 1]
+    if (pick === current) return
+    if (current) links[current.id].removeAttribute('aria-current')
+    if (pick) links[pick.id].setAttribute('aria-current', 'true')
+    current = pick
+  }
+  window.addEventListener('scroll', function () { if (!queued) { queued = true; requestAnimationFrame(mark) } }, { passive: true })
+  mark()
+})()
+</script>
+</body>
+</html>
